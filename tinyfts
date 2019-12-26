@@ -56,6 +56,8 @@ set config {
     table tinyfts
 
     minLength 2
+
+    limit 100
 }
 
 
@@ -139,8 +141,8 @@ proc wapp-page-search {} {
             snippet("%1$s", 3, :startMatch, :endMatch, '...', 20) AS snippet
         FROM "%1$s"(:query)
         ORDER BY rank ASC
-        LIMIT 100
-    } [config table]] values {
+        LIMIT %2$u
+    } [config table] [config limit]] values {
         set v [array get values]
         unset values
 
