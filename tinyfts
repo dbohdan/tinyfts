@@ -33,6 +33,8 @@ package require sqlite3 3.9
 set css {}
 
 set config {
+    file %REQUIRED%
+
     header {
         <!DOCTYPE html>
         <html>
@@ -52,6 +54,7 @@ set config {
     title {
         tinyfts
     }
+
     subtitle {
         Full text search
     }
@@ -179,12 +182,23 @@ proc wapp-page-search {} {
 ### CLI
 
 proc usage me {
-    puts stderr "usage: $me file.sqlite3 ?wapp-arg ...?"
+    set options {}
+    dict for {k v} $::config {
+        set line "--$k value"
+
+        if {$v ne {%REQUIRED%}} {
+            set line \[$line\]
+        }
+
+        lappend options $line
+    }
+
+    puts stderr "usage: $me [join $options { }] \[wapp-arg ...\]"
 }
 
 
 proc start {argv0 argv} {
-    if {$argv eq {} || $argv in {/? -? -h -help --help}} {
+    if {$argv in {/? -? -h -help --help}} {
         usage $argv0
         exit 0
     }
@@ -194,8 +208,23 @@ proc start {argv0 argv} {
         uplevel 1 {source vendor/wapp/wapp.tcl}
         set ::css [fileutil::cat vendor/awsm.css/awsm.css]
 
-        set wappArgs [lassign $argv file]
-        sqlite3 db $file -create false -readonly true
+        set wappArgs {}
+        foreach {flag v} $argv {
+            regsub ^--? $flag {} k
+
+            if {[dict exists $::config $k]} {
+                dict set ::config $k $v
+            } else {
+                lappend wappArgs $flag $v
+            }
+        }
+
+        if {{%REQUIRED%} in [dict values $::config]} {
+            usage $argv0
+            exit 1
+        }
+
+        sqlite3 db [config file] -create false -readonly true
         wapp-start $wappArgs
     } on error {msg opts} {
         puts stderr "startup error: [dict get $opts -errorinfo]"
