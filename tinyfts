@@ -1,0 +1,152 @@
+#! /usr/bin/env tclsh
+# tinyfts: a very small self-contained full text search HTTP server.
+# ==============================================================================
+# Copyright (c) 2019 D. Bohdan and contributors listed in AUTHORS
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+# ==============================================================================
+
+package require Tcl 8.6
+package require fileutil 1
+package require sqlite3 3.9
+
+
+### Templates
+
+# The stylesheet is loaded from a file in [start].
+set css {}
+
+set header {
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <title>%html($title)</title>
+        <link rel="stylesheet" type="text/css" href="/css">
+    </head>
+    <body>
+}
+
+set footer {
+    </body>
+    </html>
+}
+
+
+### Controllers
+
+proc wapp-default {} {
+    set title tinyfts
+
+    wapp-trim [string cat $::header {
+        <header><h1>Hello, World!</h1></header>\n
+    } $::footer]
+}
+
+
+proc wapp-page-css {} {
+    wapp-mimetype text/css
+    wapp $::css
+}
+
+
+proc wapp-page-search {} {
+    set title tinyfts
+
+    set startMatch %%%START_MATCH%%%
+    set endMatch %%%END_MATCH%%%
+    set highlightMatch {{start end text} {
+        set re ^(.*?)${start}(.*?)${end}(.*?)$
+        wapp-trim [expr {
+            [regexp $re $text _ before matched after]
+            ? {%html($before)<strong>%html($matched)</strong>%html($after)}
+            : {%html($text)}
+        }]
+    }}
+
+    wapp-allow-xorigin-params
+    set query [wapp-param query {}]
+
+    wapp-trim $::header
+    wapp-trim {
+        <header><h1>Results for "%html($query)"</h1></header>
+        <main>
+    }
+    db eval {
+        SELECT
+            url,
+            title,
+            modified,
+            snippet(tinyfts, 3, :startMatch, :endMatch, '...', 20) AS snippet
+        FROM tinyfts(:query)
+        LIMIT 100
+    } values {
+        set v [array get values]
+        unset values
+
+        wapp-trim {
+            <dt>
+                <a href="%html([dict get $v url])">
+                    %html([dict get $v title])
+                </a>
+            </dt>
+            <dd>
+        }
+        apply $highlightMatch $startMatch $endMatch [dict get $v snippet]
+        wapp-trim </dd>
+    }
+
+    wapp-trim {</main>}
+    wapp-trim $::footer
+}
+
+
+### CLI
+
+proc usage me {
+    puts stderr "usage: $me file.sqlite3 ?wapp-arg ...?"
+}
+
+
+proc start {argv0 argv} {
+    if {$argv eq {} || $argv in {/? -? -h -help --help}} {
+        usage $argv0
+        exit 0
+    }
+
+    try {
+        cd [file dirname [info script]]
+        uplevel 1 {source vendor/wapp/wapp.tcl}
+        set ::css [fileutil::cat vendor/awsm.css/awsm.css]
+
+        set wappArgs [lassign $argv file]
+        sqlite3 db $file -create false -readonly true
+        wapp-start $wappArgs
+    } on error {msg opts} {
+        puts stderr "startup error: [dict get $opts -errorinfo]"
+        usage $argv0
+        exit 1
+    }
+}
+
+
+# If this is the main script...
+if {[info exists argv0] && ([file tail [info script]] eq [file tail $argv0])} {
+    start $argv0 $argv
+}

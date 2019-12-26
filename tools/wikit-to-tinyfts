@@ -1,0 +1,72 @@
+#! /usr/bin/env tclsh
+# A tool to convert a Wikit wiki database into a tinyfts database.
+# ==============================================================================
+# Copyright (c) 2019 D. Bohdan and contributors listed in AUTHORS
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+# ==============================================================================
+
+
+package require Tcl 8.6
+package require http 2
+package require sqlite3 3.9
+
+
+proc wikit-to-tinytfs {
+    src-db
+    dest-db
+    {url-prefix https://wiki.tcl-lang.org/page/}
+} {
+    sqlite3 src ${src-db} -create false -readonly true
+    sqlite3 dest ${dest-db}
+
+    dest eval {
+        CREATE VIRTUAL TABLE tinyfts USING fts5(url, title, modified, content);
+    }
+ 
+    dest function url [list apply {{prefix name} {
+        set encoded [string range [http::formatQuery {} $name] 1 end]
+        return -level 0 $prefix$encoded 
+    }} ${url-prefix}]
+
+    dest transaction {
+        src eval {
+            SELECT pages.name, pages.date, pages_content.content
+            FROM pages
+            JOIN pages_content
+            ON pages.id = pages_content.id
+        } values {
+            dest eval {
+                INSERT INTO tinyfts
+                VALUES (
+                    url(:values(name)),
+                    :values(name),
+                    :values(date),
+                    :values(content)
+                )
+            }
+        }
+    }
+}
+
+
+# If this is the main script...
+if {[info exists argv0] && ([file tail [info script]] eq [file tail $argv0])} {
+    wikit-to-tinytfs {*}$argv
+}
