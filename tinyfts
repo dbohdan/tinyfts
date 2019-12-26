@@ -61,7 +61,7 @@ set config {
 
     table tinyfts
 
-    minLength 2
+    min-length 2
 
     limit 100
 }
@@ -136,8 +136,8 @@ proc wapp-page-search {} {
     }}
 
     set query [wapp-param query {}]
-    if {[string length [string trim $query]] < [config minLength]} {
-        error-reply 400 "Query must be at least [config minLength]\
+    if {[string length [string trim $query]] < [config min-length]} {
+        error-reply 400 "Query must be at least [config min-length]\
                          characters long."
         return
     }
