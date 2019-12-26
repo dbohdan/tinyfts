@@ -51,6 +51,7 @@ proc wikit-to-tinytfs {
             FROM pages
             JOIN pages_content
             ON pages.id = pages_content.id
+            WHERE pages_content.content <> ''
         } values {
             dest eval {
                 INSERT INTO tinyfts
