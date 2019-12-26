@@ -27,48 +27,55 @@ package require fileutil 1
 package require sqlite3 3.9
 
 
-### Templates
+### Templates and configuration
 
-# The stylesheet is loaded from a file in [start].
-set css {}
+# The CSS stylesheet is loaded from a file in [start].
+set config {
+    css {}
 
-set header {
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <title>%html($title)</title>
-        <link rel="stylesheet" type="text/css" href="/css">
-    </head>
-    <body>
+    header {
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>%html([config title])</title>
+            <link rel="stylesheet" type="text/css" href="/css">
+        </head>
+        <body>
+    }
+
+    footer {
+        </body>
+        </html>
+    }
+
+    title {
+        tinyfts
+    }
 }
 
-set footer {
-    </body>
-    </html>
+
+proc config args {
+    return [dict get $::config {*}$args]
 }
 
 
 ### Controllers
 
 proc wapp-default {} {
-    set title tinyfts
-
-    wapp-trim [string cat $::header {
+    wapp-trim [string cat [config header] {
         <header><h1>Hello, World!</h1></header>\n
-    } $::footer]
+    } [config footer]]
 }
 
 
 proc wapp-page-css {} {
     wapp-mimetype text/css
-    wapp $::css
+    wapp [config css]
 }
 
 
 proc wapp-page-search {} {
-    set title tinyfts
-
     set startMatch %%%START_MATCH%%%
     set endMatch %%%END_MATCH%%%
     set highlightMatch {{start end text} {
@@ -83,7 +90,7 @@ proc wapp-page-search {} {
     wapp-allow-xorigin-params
     set query [wapp-param query {}]
 
-    wapp-trim $::header
+    wapp-trim [config header]
     wapp-trim {
         <header><h1>Results for "%html($query)"</h1></header>
         <main>
@@ -113,7 +120,7 @@ proc wapp-page-search {} {
     }
 
     wapp-trim {</main>}
-    wapp-trim $::footer
+    wapp-trim [config footer]
 }
 
 
@@ -133,7 +140,7 @@ proc start {argv0 argv} {
     try {
         cd [file dirname [info script]]
         uplevel 1 {source vendor/wapp/wapp.tcl}
-        set ::css [fileutil::cat vendor/awsm.css/awsm.css]
+        dict set ::config css [fileutil::cat vendor/awsm.css/awsm.css]
 
         set wappArgs [lassign $argv file]
         sqlite3 db $file -create false -readonly true
