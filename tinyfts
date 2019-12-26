@@ -55,7 +55,7 @@ set config {
 
     table tinyfts
 
-    minLength 3
+    minLength 2
 }
 
 
