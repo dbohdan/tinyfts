@@ -149,6 +149,7 @@ proc wapp-page-search {} {
         <ol>
     }
 
+    set n 0
     db eval [format {
         SELECT
             url,
@@ -159,22 +160,31 @@ proc wapp-page-search {} {
         ORDER BY rank ASC
         LIMIT %2$u
     } [config table] [config limit]] values {
+        set dateTime [clock format $values(modified) \
+                                   -format {%Y-%m-%d} \
+                                   -timezone :Etc/UTC]
         wapp-trim {
             <li>
                 <dl>
                     <dt>
                         <a href="%html%($values(url))%">
-                            %html%($values(title))%
-                        </a>
+                            %html%($values(title))%</a>
+                        (modified %html($dateTime))
                     </dt>
                 </dl>
                 <dd>
         }
         apply $highlightMatch $startMatch $endMatch $values(snippet)
         wapp-trim </dd>\n</li>
+
+        incr n
     }
 
-    wapp-trim </ol>\n</main>
+    wapp-trim </ol>
+    if {$n == 0} {
+        wapp-trim {No results.}
+    }
+    wapp-trim </main>
     wapp-trim [config footer]
 }
 
