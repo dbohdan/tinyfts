@@ -78,7 +78,7 @@ proc config args {
 proc error-reply {code message} {
     wapp-reply-code $code
     wapp-trim [config header]
-    wapp-trim {<header>%html($message)</header>}
+    wapp-trim {<header><h1>Error</h1><p>%html($message)</p></header>}
     wapp-trim [config footer]
 }
 
