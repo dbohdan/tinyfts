@@ -52,6 +52,9 @@ set config {
     title {
         tinyfts
     }
+    subtitle {
+        Full text search
+    }
 
     table tinyfts
 
@@ -79,7 +82,16 @@ proc error-reply {code message} {
 
 proc wapp-default {} {
     wapp-trim [string cat [config header] {
-        <header><h1>Hello, World!</h1></header>\n
+        <header>
+            <h1>%html([config title])</h1>
+            <p>%html([config subtitle])</p>
+        </header>
+        <main>
+            <form action="/search">
+                <input type="text" name="query">
+                <input type="submit" value="Search">
+            </form>
+        </main>
     } [config footer]]
 }
 
