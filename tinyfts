@@ -89,18 +89,35 @@ proc wapp-page-css {} {
 
 
 proc wapp-page-search {} {
+    wapp-allow-xorigin-params
+
     set startMatch %%%START_MATCH%%%
     set endMatch %%%END_MATCH%%%
-    set highlightMatch {{start end text} {
-        set re ^(.*?)${start}(.*?)${end}(.*?)$
-        wapp-trim [expr {
-            [regexp $re $text _ before matched after]
-            ? {%html($before)<strong>%html($matched)</strong>%html($after)}
-            : {%html($text)}
-        }]
+
+    set highlightMatch {{startMatch endMatch text} {
+        set re (.*?)${startMatch}(.*?)${endMatch}(.*?)
+
+        set start 0
+        while {[regexp -start $start \
+                       -indices \
+                       $re \
+                       $text \
+                       _ \
+                       before matched after]} {
+            wapp-trim {
+                %html([string range $text {*}$before])
+                <strong>%html([string range $text {*}$matched])</strong>
+                %html([string range $text {*}$after])
+            }
+
+            set start [lindex $after 1]
+        }
+
+        if {$start == 0} {
+            wapp-trim {%html($text)}
+        }
     }}
 
-    wapp-allow-xorigin-params
     set query [wapp-param query {}]
     if {[string length [string trim $query]] < [config minLength]} {
         error-reply 400 "Query must be at least [config minLength]\
@@ -113,6 +130,7 @@ proc wapp-page-search {} {
         <header><h1>Results for "%html($query)"</h1></header>
         <main>
     }
+
     db eval [format {
         SELECT
             url,
