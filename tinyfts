@@ -156,21 +156,18 @@ proc wapp-page-search {} {
         ORDER BY rank ASC
         LIMIT %2$u
     } [config table] [config limit]] values {
-        set v [array get values]
-        unset values
-
         wapp-trim {
             <li>
                 <dl>
                     <dt>
-                        <a href="%html([dict get $v url])">
-                            %html([dict get $v title])
+                        <a href="%html%($values(url))%">
+                            %html%($values(title))%
                         </a>
                     </dt>
                 </dl>
                 <dd>
         }
-        apply $highlightMatch $startMatch $endMatch [dict get $v snippet]
+        apply $highlightMatch $startMatch $endMatch $values(snippet)
         wapp-trim </dd>\n</li>
     }
 
