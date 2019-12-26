@@ -52,6 +52,8 @@ set config {
     title {
         tinyfts
     }
+
+    table tinyfts
 }
 
 
@@ -95,15 +97,15 @@ proc wapp-page-search {} {
         <header><h1>Results for "%html($query)"</h1></header>
         <main>
     }
-    db eval {
+    db eval [format {
         SELECT
             url,
             title,
             modified,
-            snippet(tinyfts, 3, :startMatch, :endMatch, '...', 20) AS snippet
-        FROM tinyfts(:query)
+            snippet("%1$s", 3, :startMatch, :endMatch, '...', 20) AS snippet
+        FROM "%1$s"(:query)
         LIMIT 100
-    } values {
+    } [config table]] values {
         set v [array get values]
         unset values
 

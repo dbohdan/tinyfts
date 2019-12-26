@@ -32,13 +32,14 @@ proc wikit-to-tinytfs {
     src-db
     dest-db
     {url-prefix https://wiki.tcl-lang.org/page/}
+    {table tinyfts}
 } {
     sqlite3 src ${src-db} -create false -readonly true
     sqlite3 dest ${dest-db}
 
-    dest eval {
-        CREATE VIRTUAL TABLE tinyfts USING fts5(url, title, modified, content);
-    }
+    dest eval [format {
+        CREATE VIRTUAL TABLE "%s" USING fts5(url, title, modified, content);
+    } $table]
  
     dest function url [list apply {{prefix name} {
         set encoded [string range [http::formatQuery {} $name] 1 end]
@@ -53,15 +54,15 @@ proc wikit-to-tinytfs {
             ON pages.id = pages_content.id
             WHERE pages_content.content <> ''
         } values {
-            dest eval {
-                INSERT INTO tinyfts
+            dest eval [format {
+                INSERT INTO "%s"
                 VALUES (
                     url(:values(name)),
                     :values(name),
                     :values(date),
                     :values(content)
                 )
-            }
+            } $table]
         }
     }
 }
