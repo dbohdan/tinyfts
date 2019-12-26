@@ -83,6 +83,45 @@ proc error-reply {code message} {
 }
 
 
+proc fts-query {startMatch endMatch query} {
+    return [format {
+        SELECT
+            url,
+            title,
+            modified,
+            snippet("%1$s", 3, :startMatch, :endMatch, '...', 20) AS snippet
+        FROM "%1$s"(:query)
+        ORDER BY rank ASC
+        LIMIT %2$u
+    } [config table] [config limit]]
+}
+
+
+proc highlight-match {startMatch endMatch text} {
+    set re (.*?)${startMatch}(.*?)${endMatch}(.*?)
+
+    set start 0
+    while {[regexp -start $start \
+                   -indices \
+                   $re \
+                   $text \
+                   _ \
+                   before matched after]} {
+        wapp-trim {
+            %html([string range $text {*}$before])
+            <strong>%html([string range $text {*}$matched])</strong>
+            %html([string range $text {*}$after])
+        }
+
+        set start [lindex $after 1]
+    }
+
+    if {$start == 0} {
+        wapp-trim {%html($text)}
+    }
+}
+
+
 proc wapp-default {} {
     wapp-trim [string cat [config header] {
         <header>
@@ -111,30 +150,6 @@ proc wapp-page-search {} {
     set startMatch %%%START_MATCH%%%
     set endMatch %%%END_MATCH%%%
 
-    set highlightMatch {{startMatch endMatch text} {
-        set re (.*?)${startMatch}(.*?)${endMatch}(.*?)
-
-        set start 0
-        while {[regexp -start $start \
-                       -indices \
-                       $re \
-                       $text \
-                       _ \
-                       before matched after]} {
-            wapp-trim {
-                %html([string range $text {*}$before])
-                <strong>%html([string range $text {*}$matched])</strong>
-                %html([string range $text {*}$after])
-            }
-
-            set start [lindex $after 1]
-        }
-
-        if {$start == 0} {
-            wapp-trim {%html($text)}
-        }
-    }}
-
     set query [wapp-param query {}]
     if {[string length [string trim $query]] < [config min-length]} {
         error-reply 400 "Query must be at least [config min-length]\
@@ -150,16 +165,7 @@ proc wapp-page-search {} {
     }
 
     set n 0
-    db eval [format {
-        SELECT
-            url,
-            title,
-            modified,
-            snippet("%1$s", 3, :startMatch, :endMatch, '...', 20) AS snippet
-        FROM "%1$s"(:query)
-        ORDER BY rank ASC
-        LIMIT %2$u
-    } [config table] [config limit]] values {
+    db eval [fts-query $startMatch $endMatch $query] values {
         set dateTime [clock format $values(modified) \
                                    -format {%Y-%m-%d} \
                                    -timezone :Etc/UTC]
@@ -174,7 +180,7 @@ proc wapp-page-search {} {
                 </dl>
                 <dd>
         }
-        apply $highlightMatch $startMatch $endMatch $values(snippet)
+        highlight-match $startMatch $endMatch $values(snippet)
         wapp-trim </dd>\n</li>
 
         incr n
