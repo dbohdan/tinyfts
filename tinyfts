@@ -54,6 +54,8 @@ set config {
     }
 
     table tinyfts
+
+    minLength 3
 }
 
 
@@ -63,6 +65,15 @@ proc config args {
 
 
 ### Controllers
+
+
+proc error-reply {code message} {
+    wapp-reply-code $code
+    wapp-trim [config header]
+    wapp-trim {<header>%html($message)</header>}
+    wapp-trim [config footer]
+}
+
 
 proc wapp-default {} {
     wapp-trim [string cat [config header] {
@@ -91,6 +102,11 @@ proc wapp-page-search {} {
 
     wapp-allow-xorigin-params
     set query [wapp-param query {}]
+    if {[string length [string trim $query]] < [config minLength]} {
+        error-reply 400 "Query must be at least [config minLength]\
+                         characters long."
+        return
+    }
 
     wapp-trim [config header]
     wapp-trim {
