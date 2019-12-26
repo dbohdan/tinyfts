@@ -31,7 +31,7 @@ package require sqlite3 3.9
 
 # The CSS stylesheet is loaded from a file in [start].
 set config {
-    css {}
+    CSS {}
 
     header {
         <!DOCTYPE html>
@@ -84,7 +84,7 @@ proc wapp-default {} {
 
 proc wapp-page-css {} {
     wapp-mimetype text/css
-    wapp [config css]
+    wapp [config CSS]
 }
 
 
@@ -159,7 +159,7 @@ proc start {argv0 argv} {
     try {
         cd [file dirname [info script]]
         uplevel 1 {source vendor/wapp/wapp.tcl}
-        dict set ::config css [fileutil::cat vendor/awsm.css/awsm.css]
+        dict set ::config CSS [fileutil::cat vendor/awsm.css/awsm.css]
 
         set wappArgs [lassign $argv file]
         sqlite3 db $file -create false -readonly true
