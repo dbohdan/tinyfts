@@ -1,5 +1,5 @@
 #! /usr/bin/env tclsh
-# A tool to convert a Nikit/Wikit wiki database into a tinyfts database.
+# A tool to import data into a tinyfts database.
 # ==============================================================================
 # Copyright (c) 2019 D. Bohdan and contributors listed in AUTHORS
 #
@@ -28,29 +28,31 @@ package require http 2
 package require sqlite3 3.9
 
 
-proc import {
-    src-type
-    src-db
-    dest-db
-    {url-prefix https://wiki.tcl-lang.org/page/}
-    {table tinyfts}
-} {
-    set srcTypes {nikit wikit}
-    if {${src-type} ni $srcTypes} {
-        error [list src-type must be one of $srcTypes]
+namespace eval import {
+    variable defaults {
+        url-prefix https://wiki.tcl-lang.org/page/
+        table tinyfts
     }
+}
 
-    sqlite3 src ${src-db} -create false -readonly true
-    sqlite3 dest ${dest-db}
 
+proc import::create-db {dest url-prefix table} {
     dest eval [format {
         CREATE VIRTUAL TABLE "%s" USING fts5(url, title, modified, content);
     } $table]
- 
+
     dest function url [list apply {{prefix name} {
         set encoded [string range [http::formatQuery {} $name] 1 end]
         return -level 0 $prefix$encoded 
     }} ${url-prefix}]
+}
+
+
+proc import::wiki {srcPath destPath config} {
+    sqlite3 src $srcPath -create false -readonly true
+    sqlite3 dest $destPath
+
+    create-db dest [dict get $config url-prefix] [dict get $config table]
 
     set query [format {
         SELECT pages.name, pages.date, pages_content.content
@@ -59,7 +61,7 @@ proc import {
         ON pages.%1$s = pages_content.%1$s
         WHERE pages_content.content <> ''
     } [expr {
-        ${src-type} eq {wikit} ? {id} : {name}
+        [dict get $config command] eq {wikit} ? {id} : {name}
     }]]
 
     dest transaction {
@@ -72,9 +74,46 @@ proc import {
                     :values(date),
                     :values(content)
                 )
-            } $table]
+            } [dict get $config table]]
         }
     }
+}
+
+
+namespace eval import::cli {
+    namespace path [namespace parent]
+}
+
+
+proc import::parse-options {command {url-prefix {}} {table {}}} {
+    variable defaults
+    set config $defaults
+    dict set config command $command
+
+    if {${url-prefix} ne {}} {
+        dict set config url-prefix ${url-prefix}
+    }
+    if {$table ne {}} {
+        dict set config table $table
+    }
+
+    return $config
+}
+
+
+proc import::nikit {src dest args} {
+    wiki $src $dest [parse-options nikit {*}$args]
+}
+
+
+proc import::wikit {src dest args} {
+    wiki $src $dest [parse-options wikit {*}$args]
+}
+
+
+namespace eval import {
+    namespace export nikit wikit
+    namespace ensemble create
 }
 
 
