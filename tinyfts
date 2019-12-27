@@ -31,11 +31,10 @@ package require sqlite3 3.9
 
 # The CSS stylesheet is loaded from a file in [start].
 set state(css) {}
-set state(hidden-flags) {db-file tcl-file}
+set state(hidden-flags) db-file
 
 set config {
     db-file {}
-    tcl-file {}
 
     css-file vendor/awsm.css/awsm.css
 
@@ -374,30 +373,6 @@ namespace eval cli {
 }
 
 
-proc cli::load-tcl-file {path db} {
-    $db eval [format {
-        CREATE VIRTUAL TABLE "%1$s" USING fts5(url, title, modified, content);
-    } [config table]]
-
-    set dictList [fileutil::cat $path]
-
-    set insertStatement [format {
-        INSERT INTO "%1$s"
-        VALUES(:url, :title, :modified, :content);
-    } [config table]]
-
-    $db transaction {
-        foreach dict $dictList {
-            foreach key {url title modified content} {
-                set $key [dict get $dict $key]
-            }
-
-            $db eval $insertStatement
-        }
-    }
-}
-
-
 proc cli::usage me {
     set options {}
     dict for {k v} $::config {
@@ -407,7 +382,7 @@ proc cli::usage me {
         lappend options $line
     }
 
-    puts stderr "usage: $me (--db-file path|--tcl-file path)\
+    puts stderr "usage: $me --db-file path\
                  [join $options { }] \[wapp-arg ...\]"
 }
 
@@ -433,19 +408,12 @@ proc cli::start {argv0 argv} {
             }
         }
 
-        if {([config db-file] eq {} && [config tcl-file] eq {})
-            || ([config db-file] ne {} && [config tcl-file] ne {})} {
+        if {[config db-file] eq {}} {
             usage $argv0
             exit 1
         }
 
-        if {[config db-file] ne {}} {
-            sqlite3 db [config db-file] -create false -readonly true
-        } else {
-            sqlite3 db :memory:
-            load-tcl-file [config tcl-file] db
-        }
-
+        sqlite3 db [config db-file] -create false -readonly true
         set ::css [fileutil::cat [config css-file]]
 
         wapp-start $wappArgs

@@ -24,6 +24,7 @@
 
 
 package require Tcl 8.6
+package require fileutil 1
 package require http 2
 package require sqlite3 3.9
 
@@ -36,23 +37,51 @@ namespace eval import {
 }
 
 
-proc import::create-db {dest url-prefix table} {
+proc import::create-db {dest config} {
     dest eval [format {
         CREATE VIRTUAL TABLE "%s" USING fts5(url, title, modified, content);
-    } $table]
+    } [dict get $config table]]
 
     dest function url [list apply {{prefix name} {
         set encoded [string range [http::formatQuery {} $name] 1 end]
         return -level 0 $prefix$encoded 
-    }} ${url-prefix}]
+    }} [dict get $config url-prefix]]
 }
+
+
+proc import::tcl-file {srcPath destPath config} {
+    set dictList [fileutil::cat $srcPath]
+    sqlite3 dest $destPath
+
+    create-db dest $config
+
+    set insertStatement [format {
+        INSERT INTO "%s"
+        VALUES (
+            :values(url),
+            :values(title),
+            :values(modified),
+            :values(content)
+        )
+    } [dict get $config table]]
+
+    dest transaction {
+        foreach dict $dictList {
+            array set values $dict
+            unset dict
+
+            dest eval $insertStatement
+        }
+    }
+}
+
 
 
 proc import::wiki {srcPath destPath config} {
     sqlite3 src $srcPath -create false -readonly true
     sqlite3 dest $destPath
 
-    create-db dest [dict get $config url-prefix] [dict get $config table]
+    create-db dest $config
 
     set query [format {
         SELECT pages.name, pages.date, pages_content.content
@@ -64,17 +93,18 @@ proc import::wiki {srcPath destPath config} {
         [dict get $config command] eq {wikit} ? {id} : {name}
     }]]
 
+    set insertStatement [format {
+        INSERT INTO "%s"
+        VALUES (
+            url(:values(name)),
+            :values(name),
+            :values(date),
+            :values(content)
+        )
+    } [dict get $config table]]
     dest transaction {
         src eval $query values {
-            dest eval [format {
-                INSERT INTO "%s"
-                VALUES (
-                    url(:values(name)),
-                    :values(name),
-                    :values(date),
-                    :values(content)
-                )
-            } [dict get $config table]]
+            dest eval $insertStatement
         }
     }
 }
@@ -108,13 +138,18 @@ proc import::nikit {src dest args} {
 }
 
 
+proc import::tcl {src dest args} {
+    tcl-file $src $dest [parse-options tcl $args]
+}
+
+
 proc import::wikit {src dest args} {
     wiki $src $dest [parse-options wikit $args]
 }
 
 
 namespace eval import {
-    namespace export nikit wikit
+    namespace export nikit tcl wikit
     namespace ensemble create
 }
 
