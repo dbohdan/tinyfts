@@ -83,6 +83,16 @@ namespace eval view {
 }
 
 
+proc view::form query {
+    wapp-trim {
+        <form action="/search">
+            <input type="text" name="query" value="%html($query)">
+            <input type="submit" value="Search">
+        </form>
+    }
+}
+
+
 proc view::default {} {
     wapp-trim [config header]
     wapp-trim {
@@ -91,12 +101,9 @@ proc view::default {} {
             <p>%html([config subtitle])</p>
         </header>
         <main>
-            <form action="/search">
-                <input type="text" name="query">
-                <input type="submit" value="Search">
-            </form>
-        </main>
     }
+    form {}
+    wapp </main>
     wapp-trim [config footer]
 }
 
@@ -165,13 +172,9 @@ proc view::results::extract-marked {startMarker endMarker text} {
 
 proc view::results::html {query startMatch endMatch results} {
     wapp-trim [config header]
-    wapp-trim {
-        <header>
-            <h1>Results for "%html($query)"</h1>
-        </header>
-        <main>
-            <ol>
-    }
+    wapp \n<main>
+    form $query
+    wapp \n<ol>\n
 
     set n 0
     foreach result $results {
