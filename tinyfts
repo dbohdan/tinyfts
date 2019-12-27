@@ -23,7 +23,6 @@
 # ==============================================================================
 
 package require Tcl 8.6
-package require fileutil 1
 package require sqlite3 3.9
 
 
@@ -426,6 +425,23 @@ namespace eval cli {
 }
 
 
+proc cli::read-file args {
+    if {[llength $args] == 0} {
+        error "wrong # args: should be \"read-file ?options? path"
+    }
+
+    set path [lindex $args end]
+    set options [lrange $args 0 end-1]
+
+    set ch [open $path r]
+    fconfigure $ch {*}$options
+    set data [read $ch]
+    close $ch
+
+    return $data
+}
+
+
 proc cli::usage me {
     set options {}
     dict for {k v} $::config {
@@ -467,7 +483,7 @@ proc cli::start {argv0 argv} {
         }
 
         sqlite3 db [config db-file] -create false -readonly true
-        dict set ::state css [fileutil::cat [config css-file]]
+        dict set ::state css [read-file [config css-file]]
 
         wapp-start $wappArgs
     } on error {msg opts} {
