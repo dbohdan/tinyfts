@@ -66,6 +66,8 @@ set config {
 
     min-length 2
 
+    rate-limit 60
+
     result-limit 100
 }
 
@@ -322,6 +324,37 @@ proc fts-query {startMatch endMatch query} {
 }
 
 
+namespace eval rate-limit {
+    variable last
+    variable count
+
+    set last(127.0.0.1) 0
+    set count(127.0.0.1) 0
+}
+
+
+proc rate-limit::allow? client {
+    variable last
+    variable count
+
+    set m [expr {[clock seconds] / 60}]
+
+    if {![info exists last($client)] || $last($client) != $m} {
+        set last($client) $m
+        set count($client) 0
+        return 1
+    }
+
+    incr count($client)
+
+    if {$count($client) > [config rate-limit]} {
+        return 0
+    }
+
+    return 1
+}
+
+
 proc wapp-default {} {
     view::default
 }
@@ -335,6 +368,15 @@ proc wapp-page-css {} {
 
 proc wapp-page-search {} {
     wapp-allow-xorigin-params
+
+    if {![rate-limit::allow? [wapp-param REMOTE_ADDR]]} {
+        wapp-mimetype text/plain
+        wapp-reply-code 403
+
+        wapp {Access denied.}
+
+        return
+    }
 
     set startMatch %%%START_MATCH%%%
     set endMatch %%%END_MATCH%%%
