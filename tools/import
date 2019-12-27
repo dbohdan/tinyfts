@@ -85,16 +85,18 @@ namespace eval import::cli {
 }
 
 
-proc import::parse-options {command {url-prefix {}} {table {}}} {
+proc import::parse-options {command options} {
     variable defaults
     set config $defaults
     dict set config command $command
 
-    if {${url-prefix} ne {}} {
-        dict set config url-prefix ${url-prefix}
-    }
-    if {$table ne {}} {
-        dict set config table $table
+    dict for {flag v} $options {
+        regsub ^--? $flag {} k
+        if {$k ni $config} {
+            error [list unknown option: $flag]
+        }
+
+        dict set config $k $v
     }
 
     return $config
@@ -102,12 +104,12 @@ proc import::parse-options {command {url-prefix {}} {table {}}} {
 
 
 proc import::nikit {src dest args} {
-    wiki $src $dest [parse-options nikit {*}$args]
+    wiki $src $dest [parse-options nikit $args]
 }
 
 
 proc import::wikit {src dest args} {
-    wiki $src $dest [parse-options wikit {*}$args]
+    wiki $src $dest [parse-options wikit $args]
 }
 
 
