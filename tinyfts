@@ -364,7 +364,12 @@ proc wapp-page-search {} {
 ### CLI
 
 
-proc load-dump {path db} {
+namespace eval cli {
+    namespace import ::config
+}
+
+
+proc cli::load-tcl-file {path db} {
     $db eval [format {
         CREATE VIRTUAL TABLE "%1$s" USING fts5(url, title, modified, content);
     } [config table]]
@@ -388,7 +393,7 @@ proc load-dump {path db} {
 }
 
 
-proc usage me {
+proc cli::usage me {
     set options {}
     dict for {k v} $::config {
         if {$k in $::state(hidden-flags)} continue
@@ -402,7 +407,7 @@ proc usage me {
 }
 
 
-proc start {argv0 argv} {
+proc cli::start {argv0 argv} {
     if {$argv in {/? -? -h -help --help}} {
         usage $argv0
         exit 0
@@ -434,7 +439,7 @@ proc start {argv0 argv} {
             sqlite3 db [config db-file] -create false -readonly true
         } else {
             sqlite3 db :memory:
-            load-dump [config tcl-file] db
+            load-tcl-file [config tcl-file] db
         }
 
         wapp-start $wappArgs
@@ -448,5 +453,5 @@ proc start {argv0 argv} {
 
 # If this is the main script...
 if {[info exists argv0] && ([file tail [info script]] eq [file tail $argv0])} {
-    start $argv0 $argv
+    cli::start $argv0 $argv
 }
