@@ -119,6 +119,14 @@ proc view::error::json {code message} {
 }
 
 
+proc view::error::tcl {code message} {
+    wapp-mimetype text/plain
+    wapp-reply-code $code
+
+    wapp-trim [list error $message]
+}
+
+
 namespace eval view::results {
     namespace path [namespace parent]
 }
@@ -270,6 +278,26 @@ proc view::results::string2json s {
 }
 
 
+proc view::results::tcl {query startMatch endMatch results} {
+    wapp-mimetype text/plain
+
+    foreach result $results {
+        wapp \{\n
+
+        foreach key {url title modified} {
+            wapp "    $key [list [dict get $result $key]]\n"
+        }
+
+        set marked [extract-marked $startMatch \
+                                   $endMatch \
+                                   [dict get $result snippet]]
+        wapp "    [list snippet $marked]"
+
+        wapp \}\n
+    }
+}
+
+
 ### Controllers
 
 proc fts-query {startMatch endMatch query} {
@@ -305,7 +333,7 @@ proc wapp-page-search {} {
 
     set query [wapp-param query {}]
     set format [wapp-param format html]
-    if {$format ni {html json}} {
+    if {$format ni {html json tcl}} {
         view::error::html 400 {Unknown format.}
         return
     }
