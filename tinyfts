@@ -97,7 +97,12 @@ proc view::default {} {
 }
 
 
-proc view::error {code message} {
+namespace eval view::error {
+    namespace path [namespace parent]
+}
+
+
+proc view::error::html {code message} {
     wapp-reply-code $code
 
     wapp-trim [config header]
@@ -106,8 +111,23 @@ proc view::error {code message} {
 }
 
 
-proc view::highlight {startMarker endMarker text} {
-    set re (.*?)${startMarker}(.*?)${endMarker}(.*?)
+proc view::error::json {code message} {
+    wapp-mimetype application/json
+    wapp-reply-code $code
+
+    wapp-trim {{"error": "%string($message)"}}
+}
+
+
+namespace eval view::results {
+    namespace path [namespace parent]
+}
+
+
+proc view::results::extract-marked {startMarker endMarker text} {
+    set re (.*?)${startMarker}(.*?)${endMarker}(.)
+
+    set all {}
 
     set start 0
     while {[regexp -start $start \
@@ -115,23 +135,23 @@ proc view::highlight {startMarker endMarker text} {
                    $re \
                    $text \
                    _ \
-                   before marked after]} {
-        wapp-trim {
-            %html([string range $text {*}$before])
-            <strong>%html([string range $text {*}$marked])</strong>
-            %html([string range $text {*}$after])
-        }
+                   before marked]} {
+        lappend all [string range $text {*}$before] \
+                    [string range $text {*}$marked]
 
-        set start [lindex $after 1]
+        set start [expr {[lindex $marked 1] + [string length $endMarker] + 1}]
     }
 
-    if {$start == 0} {
-        wapp-trim {%html($text)}
+    set remainer [string range $text $start end]
+    if {$remainer ne {}} {
+        lappend all $remainer {}
     }
+
+    return $all
 }
 
 
-proc view::results {query startMatch endMatch results} {
+proc view::results::html {query startMatch endMatch results} {
     wapp-trim [config header]
     wapp-trim {
         <header>
@@ -142,22 +162,33 @@ proc view::results {query startMatch endMatch results} {
     }
 
     set n 0
-    foreach {url title modified snippet} $results {
-        set dateTime [clock format $modified \
+    foreach result $results {
+        set dateTime [clock format [dict get $result modified] \
                                    -format {%Y-%m-%d} \
                                    -timezone :Etc/UTC]
         wapp-trim {
             <li>
                 <dl>
                     <dt>
-                        <a href="%html($url)">
-                            %html%($title)%</a>
+                        <a href="%html([dict get $result url])">
+                            %html([dict get $result title])</a>
                         (modified %html($dateTime))
                     </dt>
                 </dl>
                 <dd>
         }
-        highlight $startMatch $endMatch $snippet
+
+        set marked [extract-marked $startMatch \
+                                   $endMatch \
+                                   [dict get $result snippet]]
+        foreach {before marked} $marked {
+            wapp-trim {
+                %html($before)<strong>%html($marked)</strong>
+            }
+
+            incr n
+        }
+
         wapp-trim </dd>\n</li>
     }
 
@@ -168,6 +199,74 @@ proc view::results {query startMatch endMatch results} {
     wapp-trim </main>
 
     wapp-trim [config footer]
+}
+
+
+proc view::results::json {query startMatch endMatch results} {
+    wapp-mimetype application/json
+
+    wapp \[
+    for {set i 0} {$i < [llength $results]} {incr i} {
+        array set r [lindex $results $i]
+
+        set marked [extract-marked $startMatch $endMatch $r(snippet)]
+        set snippetParts [lmap x $marked {
+            lindex \"[string2json $x]\"
+        }]
+
+        wapp-trim {{
+            "url": "%unsafe%([string2json $r(url)])%",
+            "title": "%unsafe%([string2json $r(title)])%",
+            "modified": %unsafe%([string2json $r(modified)])%,
+            "snippet": \[%unsafe%([join $snippetParts {, }])%\]
+        }}
+
+        if {$i < [llength $results] - 1} {
+            wapp ,
+        }
+    }
+    wapp \]
+}
+
+
+proc view::results::string2json s {
+    return [string map {
+        \x00 \\u0000
+        \x01 \\u0001
+        \x02 \\u0002
+        \x03 \\u0003
+        \x04 \\u0004
+        \x05 \\u0005
+        \x06 \\u0006
+        \x07 \\u0007
+        \x08 \\b
+        \x09 \\t
+        \x0a \\n
+        \x0b \\u000b
+        \x0c \\f
+        \x0d \\r
+        \x0e \\u000e
+        \x0f \\u000f
+        \x10 \\u0010
+        \x11 \\u0011
+        \x12 \\u0012
+        \x13 \\u0013
+        \x14 \\u0014
+        \x15 \\u0015
+        \x16 \\u0016
+        \x17 \\u0017
+        \x18 \\u0018
+        \x19 \\u0019
+        \x1a \\u001a
+        \x1b \\u001b
+        \x1c \\u001c
+        \x1d \\u001d
+        \x1e \\u001e
+        \x1f \\u001f
+        \" \\\"
+        \\ \\\\
+        </  <\\/
+    } [encoding convertto utf-8 $s]]
 }
 
 
@@ -205,21 +304,23 @@ proc wapp-page-search {} {
     set endMatch %%%END_MATCH%%%
 
     set query [wapp-param query {}]
+    set format [wapp-param format html]
+    if {$format ni {html json}} {
+        view::error::html 400 {Unknown format.}
+        return
+    }
     if {[string length [string trim $query]] < [config min-length]} {
-        view::error 400 "Query must be at least [config min-length]\
-                         characters long."
+        view::error::$format 400 "Query must be at least [config min-length]\
+                                  characters long."
         return
     }
 
     set results {}
     db eval [fts-query $startMatch $endMatch $query] values {
-        lappend results $values(url) \
-                        $values(title) \
-                        $values(modified) \
-                        $values(snippet)
+        lappend results [array get values]
     }
 
-    view::results $query $startMatch $endMatch $results
+    view::results::$format $query $startMatch $endMatch $results
 }
 
 
