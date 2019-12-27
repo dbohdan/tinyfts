@@ -45,7 +45,7 @@ set config {
         <html>
         <head>
             <meta charset="utf-8">
-            <title>%html([config title])</title>
+            <title>%html([config::get title])</title>
             <link rel="stylesheet" type="text/css" href="/css">
         </head>
         <body>
@@ -74,23 +74,40 @@ set config {
 }
 
 
-proc config args {
-    return [dict get $::config {*}$args]
+proc accessor {name varName} {
+    namespace eval $name [format {
+        proc get args {
+            return [dict get $%1$s {*}$args]
+        }
+
+
+        proc get-default {default args} {
+            if {[dict exists $%1$s {*}$args]} {
+                return [dict get $%1$s {*}$args]
+            } else {
+                return $default
+            }
+        }
+
+
+        proc set args {
+            dict set %1$s {*}$args
+        }
+
+
+        proc update args {
+            ::set updateScript [lindex $args end]
+            ::set args [lrange $args 0 end-1]
+            ::set updated [uplevel 1 [list {*}$updateScript \
+                                           [dict get $%1$s {*}$args]]]
+            dict set %1$s {*}$args $updated
+        }
+    } [list $varName]]
 }
 
 
-proc state args {
-    if {[lindex $args 0] eq {-default}} {
-        set default [lindex $args 1]
-        set args [lrange $args 2 end]
-    }
-
-    if {[info exists default] && ![dict exists $::state {*}$args]} {
-        return $default
-    }
-
-    return [dict get $::state {*}$args]
-}
+accessor config ::config
+accessor state ::state
 
 
 ### Views
@@ -111,17 +128,17 @@ proc view::form query {
 
 
 proc view::default {} {
-    wapp-trim [config header]
+    wapp-trim [config::get header]
     wapp-trim {
         <header>
-            <h1>%html([config title])</h1>
-            <p>%html([config subtitle])</p>
+            <h1>%html([config::get title])</h1>
+            <p>%html([config::get subtitle])</p>
         </header>
         <main>
     }
     form {}
     wapp </main>
-    wapp-trim [config footer]
+    wapp-trim [config::get footer]
 }
 
 
@@ -133,9 +150,9 @@ namespace eval view::error {
 proc view::error::html {code message} {
     wapp-reply-code $code
 
-    wapp-trim [config header]
+    wapp-trim [config::get header]
     wapp-trim {<header><h1>Error</h1><p>%html($message)</p></header>}
-    wapp-trim [config footer]
+    wapp-trim [config::get footer]
 }
 
 
@@ -188,7 +205,7 @@ proc view::results::extract-marked {startMarker endMarker text} {
 
 
 proc view::results::html {query startMatch endMatch results} {
-    wapp-trim [config header]
+    wapp-trim [config::get header]
     wapp \n<main>
     form $query
     wapp \n<ol>\n
@@ -230,7 +247,7 @@ proc view::results::html {query startMatch endMatch results} {
     }
     wapp-trim </main>
 
-    wapp-trim [config footer]
+    wapp-trim [config::get footer]
 }
 
 
@@ -336,7 +353,7 @@ proc fts-query {startMatch endMatch query} {
         FROM "%1$s"(:query)
         ORDER BY rank ASC
         LIMIT %2$u
-    } [config table] [config result-limit]]
+    } [config::get table] [config::get result-limit]]
 }
 
 
@@ -346,18 +363,18 @@ namespace eval rate-limit {}
 proc rate-limit::allow? client {
     set m [expr {[clock seconds] / 60}]
 
-    if {[state -default -1 rate $client last] != $m} {
+    if {[state::get-default -1 rate $client last] != $m} {
         dict set ::state rate $client last $m
         dict set ::state rate $client count 0
 
         return 1
     }
 
-    dict set ::state rate $client count [expr {
-        1 + [state rate $client count]
-    }]
+    state::update rate $client count {apply {x {
+        incr x
+    }}}
 
-    if {[state rate $client count] > [config rate-limit]} {
+    if {[state::get rate $client count] > [config::get rate-limit]} {
         return 0
     }
 
@@ -372,7 +389,7 @@ proc wapp-default {} {
 
 proc wapp-page-css {} {
     wapp-mimetype text/css
-    wapp [state css]
+    wapp [state::get css]
 }
 
 
@@ -397,8 +414,8 @@ proc wapp-page-search {} {
         view::error::html 400 {Unknown format.}
         return
     }
-    if {[string length [string trim $query]] < [config min-length]} {
-        view::error::$format 400 "Query must be at least [config min-length]\
+    if {[string length [string trim $query]] < [config::get min-length]} {
+        view::error::$format 400 "Query must be at least [config::get min-length]\
                                   characters long."
         return
     }
@@ -445,7 +462,7 @@ proc cli::read-file args {
 proc cli::usage me {
     set options {}
     dict for {k v} $::config {
-        if {$k in [state hidden-flags]} continue
+        if {$k in [state::get hidden-flags]} continue
         set line "\[--$k value\]"
 
         lappend options $line
@@ -477,13 +494,13 @@ proc cli::start {argv0 argv} {
             }
         }
 
-        if {[config db-file] eq {}} {
+        if {[config::get db-file] eq {}} {
             usage $argv0
             exit 1
         }
 
-        sqlite3 db [config db-file] -create false -readonly true
-        dict set ::state css [read-file [config css-file]]
+        sqlite3 db [config::get db-file] -create false -readonly true
+        dict set ::state css [read-file [config::get css-file]]
 
         wapp-start $wappArgs
     } on error {msg opts} {
