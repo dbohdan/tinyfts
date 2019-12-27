@@ -30,8 +30,11 @@ package require sqlite3 3.9
 ### Configuration
 
 # The CSS stylesheet is loaded from a file in [start].
-set state(css) {}
-set state(hidden-flags) db-file
+set state {
+    css {}
+    hidden-flags db-file
+    rate {}
+}
 
 set config {
     db-file {}
@@ -74,6 +77,20 @@ set config {
 
 proc config args {
     return [dict get $::config {*}$args]
+}
+
+
+proc state args {
+    if {[lindex $args 0] eq {-default}} {
+        set default [lindex $args 1]
+        set args [lrange $args 2 end]
+    }
+
+    if {[info exists default] && ![dict exists $::state {*}$args]} {
+        return $default
+    }
+
+    return [dict get $::state {*}$args]
 }
 
 
@@ -324,30 +341,24 @@ proc fts-query {startMatch endMatch query} {
 }
 
 
-namespace eval rate-limit {
-    variable last
-    variable count
-
-    set last(127.0.0.1) 0
-    set count(127.0.0.1) 0
-}
+namespace eval rate-limit {}
 
 
 proc rate-limit::allow? client {
-    variable last
-    variable count
-
     set m [expr {[clock seconds] / 60}]
 
-    if {![info exists last($client)] || $last($client) != $m} {
-        set last($client) $m
-        set count($client) 0
+    if {[state -default -1 rate $client last] != $m} {
+        dict set ::state rate $client last $m
+        dict set ::state rate $client count 0
+
         return 1
     }
 
-    incr count($client)
+    dict set ::state rate $client count [expr {
+        1 + [state rate $client count]
+    }]
 
-    if {$count($client) > [config rate-limit]} {
+    if {[state rate $client count] > [config rate-limit]} {
         return 0
     }
 
@@ -362,7 +373,7 @@ proc wapp-default {} {
 
 proc wapp-page-css {} {
     wapp-mimetype text/css
-    wapp $::css
+    wapp [state css]
 }
 
 
@@ -418,7 +429,7 @@ namespace eval cli {
 proc cli::usage me {
     set options {}
     dict for {k v} $::config {
-        if {$k in $::state(hidden-flags)} continue
+        if {$k in [state hidden-flags]} continue
         set line "\[--$k value\]"
 
         lappend options $line
@@ -456,7 +467,7 @@ proc cli::start {argv0 argv} {
         }
 
         sqlite3 db [config db-file] -create false -readonly true
-        set ::css [fileutil::cat [config css-file]]
+        dict set ::state css [fileutil::cat [config css-file]]
 
         wapp-start $wappArgs
     } on error {msg opts} {
