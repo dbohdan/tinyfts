@@ -346,8 +346,13 @@ proc wapp-page-search {} {
     }
 
     set results {}
-    db eval [fts-query $startMatch $endMatch $query] values {
-        lappend results [array get values]
+    try {
+        db eval [fts-query $startMatch $endMatch $query] values {
+            lappend results [array get values]
+        }
+    } on error {msg _} {
+        view::error::$format 400 $msg
+        return
     }
 
     view::results::$format $query $startMatch $endMatch $results
