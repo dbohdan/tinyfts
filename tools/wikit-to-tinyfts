@@ -1,5 +1,5 @@
 #! /usr/bin/env tclsh
-# A tool to convert a Wikit wiki database into a tinyfts database.
+# A tool to convert a Nikit/Wikit wiki database into a tinyfts database.
 # ==============================================================================
 # Copyright (c) 2019 D. Bohdan and contributors listed in AUTHORS
 #
@@ -28,12 +28,18 @@ package require http 2
 package require sqlite3 3.9
 
 
-proc wikit-to-tinytfs {
+proc import {
+    src-type
     src-db
     dest-db
     {url-prefix https://wiki.tcl-lang.org/page/}
     {table tinyfts}
 } {
+    set srcTypes {nikit wikit}
+    if {${src-type} ni $srcTypes} {
+        error [list src-type must be one of $srcTypes]
+    }
+
     sqlite3 src ${src-db} -create false -readonly true
     sqlite3 dest ${dest-db}
 
@@ -46,14 +52,18 @@ proc wikit-to-tinytfs {
         return -level 0 $prefix$encoded 
     }} ${url-prefix}]
 
+    set query [format {
+        SELECT pages.name, pages.date, pages_content.content
+        FROM pages
+        JOIN pages_content
+        ON pages.%1$s = pages_content.%1$s
+        WHERE pages_content.content <> ''
+    } [expr {
+        ${src-type} eq {wikit} ? {id} : {name}
+    }]]
+
     dest transaction {
-        src eval {
-            SELECT pages.name, pages.date, pages_content.content
-            FROM pages
-            JOIN pages_content
-            ON pages.id = pages_content.id
-            WHERE pages_content.content <> ''
-        } values {
+        src eval $query values {
             dest eval [format {
                 INSERT INTO "%s"
                 VALUES (
@@ -70,5 +80,5 @@ proc wikit-to-tinytfs {
 
 # If this is the main script...
 if {[info exists argv0] && ([file tail [info script]] eq [file tail $argv0])} {
-    wikit-to-tinytfs {*}$argv
+    import {*}$argv
 }
