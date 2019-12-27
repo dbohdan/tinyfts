@@ -39,7 +39,14 @@ namespace eval import {
 
 proc import::create-db {dest config} {
     dest eval [format {
-        CREATE VIRTUAL TABLE "%s" USING fts5(url, title, modified, content);
+        CREATE VIRTUAL TABLE "%s"
+        USING fts5(
+            url,
+            title,
+            modified,
+            content,
+            tokenize = 'porter unicode61'
+        );
     } [dict get $config table]]
 
     dest function url [list apply {{prefix name} {
