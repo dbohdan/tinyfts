@@ -30,10 +30,12 @@ package require sqlite3 3.9
 ### Configuration
 
 # The CSS stylesheet is loaded from a file in [start].
-set css {}
+set state(css) {}
+set state(hidden-flags) {db-file tcl-file}
 
 set config {
-    file %REQUIRED%
+    db-file {}
+    tcl-file {}
 
     header {
         <!DOCTYPE html>
@@ -361,19 +363,42 @@ proc wapp-page-search {} {
 
 ### CLI
 
+
+proc load-dump {path db} {
+    $db eval [format {
+        CREATE VIRTUAL TABLE "%1$s" USING fts5(url, title, modified, content);
+    } [config table]]
+
+    set dictList [fileutil::cat $path]
+
+    set insertStatement [format {
+        INSERT INTO "%1$s"
+        VALUES(:url, :title, :modified, :content);
+    } [config table]]
+
+    $db transaction {
+        foreach dict $dictList {
+            foreach key {url title modified content} {
+                set $key [dict get $dict $key]
+            }
+
+            $db eval $insertStatement
+        }
+    }
+}
+
+
 proc usage me {
     set options {}
     dict for {k v} $::config {
-        set line "--$k value"
-
-        if {$v ne {%REQUIRED%}} {
-            set line \[$line\]
-        }
+        if {$k in $::state(hidden-flags)} continue
+        set line "\[--$k value\]"
 
         lappend options $line
     }
 
-    puts stderr "usage: $me [join $options { }] \[wapp-arg ...\]"
+    puts stderr "usage: $me (--db-file path|--tcl-file path)\
+                 [join $options { }] \[wapp-arg ...\]"
 }
 
 
@@ -399,12 +424,19 @@ proc start {argv0 argv} {
             }
         }
 
-        if {{%REQUIRED%} in [dict values $::config]} {
+        if {([config db-file] eq {} && [config tcl-file] eq {})
+            || ([config db-file] ne {} && [config tcl-file] ne {})} {
             usage $argv0
             exit 1
         }
 
-        sqlite3 db [config file] -create false -readonly true
+        if {[config db-file] ne {}} {
+            sqlite3 db [config db-file] -create false -readonly true
+        } else {
+            sqlite3 db :memory:
+            load-dump [config tcl-file] db
+        }
+
         wapp-start $wappArgs
     } on error {msg opts} {
         puts stderr "startup error: [dict get $opts -errorinfo]"
