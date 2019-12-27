@@ -37,6 +37,8 @@ set config {
     db-file {}
     tcl-file {}
 
+    css-file vendor/awsm.css/awsm.css
+
     header {
         <!DOCTYPE html>
         <html>
@@ -416,7 +418,6 @@ proc cli::start {argv0 argv} {
     try {
         cd [file dirname [info script]]
         uplevel 1 {source vendor/wapp/wapp.tcl}
-        set ::css [fileutil::cat vendor/awsm.css/awsm.css]
 
         set wappArgs {}
         foreach {flag v} $argv {
@@ -441,6 +442,8 @@ proc cli::start {argv0 argv} {
             sqlite3 db :memory:
             load-tcl-file [config tcl-file] db
         }
+
+        set ::css [fileutil::cat [config css-file]]
 
         wapp-start $wappArgs
     } on error {msg opts} {
