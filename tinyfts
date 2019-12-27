@@ -27,7 +27,7 @@ package require fileutil 1
 package require sqlite3 3.9
 
 
-### Templates and configuration
+### Configuration
 
 # The CSS stylesheet is loaded from a file in [start].
 set css {}
@@ -72,16 +72,106 @@ proc config args {
 }
 
 
-### Controllers
+### Views
+
+namespace eval view {
+    namespace import ::config
+}
 
 
-proc error-reply {code message} {
+proc view::default {} {
+    wapp-trim [config header]
+    wapp-trim {
+        <header>
+            <h1>%html([config title])</h1>
+            <p>%html([config subtitle])</p>
+        </header>
+        <main>
+            <form action="/search">
+                <input type="text" name="query">
+                <input type="submit" value="Search">
+            </form>
+        </main>
+    }
+    wapp-trim [config footer]
+}
+
+
+proc view::error {code message} {
     wapp-reply-code $code
+
     wapp-trim [config header]
     wapp-trim {<header><h1>Error</h1><p>%html($message)</p></header>}
     wapp-trim [config footer]
 }
 
+
+proc view::highlight {startMarker endMarker text} {
+    set re (.*?)${startMarker}(.*?)${endMarker}(.*?)
+
+    set start 0
+    while {[regexp -start $start \
+                   -indices \
+                   $re \
+                   $text \
+                   _ \
+                   before marked after]} {
+        wapp-trim {
+            %html([string range $text {*}$before])
+            <strong>%html([string range $text {*}$marked])</strong>
+            %html([string range $text {*}$after])
+        }
+
+        set start [lindex $after 1]
+    }
+
+    if {$start == 0} {
+        wapp-trim {%html($text)}
+    }
+}
+
+
+proc view::results {query startMatch endMatch results} {
+    wapp-trim [config header]
+    wapp-trim {
+        <header>
+            <h1>Results for "%html($query)"</h1>
+        </header>
+        <main>
+            <ol>
+    }
+
+    set n 0
+    foreach {url title modified snippet} $results {
+        set dateTime [clock format $modified \
+                                   -format {%Y-%m-%d} \
+                                   -timezone :Etc/UTC]
+        wapp-trim {
+            <li>
+                <dl>
+                    <dt>
+                        <a href="%html($url)">
+                            %html%($title)%</a>
+                        (modified %html($dateTime))
+                    </dt>
+                </dl>
+                <dd>
+        }
+        highlight $startMatch $endMatch $snippet
+        wapp-trim </dd>\n</li>
+    }
+
+    wapp-trim </ol>
+    if {$n == 0} {
+        wapp-trim {No results.}
+    }
+    wapp-trim </main>
+
+    wapp-trim [config footer]
+}
+
+
+### Controllers
 
 proc fts-query {startMatch endMatch query} {
     return [format {
@@ -97,44 +187,8 @@ proc fts-query {startMatch endMatch query} {
 }
 
 
-proc highlight-match {startMatch endMatch text} {
-    set re (.*?)${startMatch}(.*?)${endMatch}(.*?)
-
-    set start 0
-    while {[regexp -start $start \
-                   -indices \
-                   $re \
-                   $text \
-                   _ \
-                   before matched after]} {
-        wapp-trim {
-            %html([string range $text {*}$before])
-            <strong>%html([string range $text {*}$matched])</strong>
-            %html([string range $text {*}$after])
-        }
-
-        set start [lindex $after 1]
-    }
-
-    if {$start == 0} {
-        wapp-trim {%html($text)}
-    }
-}
-
-
 proc wapp-default {} {
-    wapp-trim [string cat [config header] {
-        <header>
-            <h1>%html([config title])</h1>
-            <p>%html([config subtitle])</p>
-        </header>
-        <main>
-            <form action="/search">
-                <input type="text" name="query">
-                <input type="submit" value="Search">
-            </form>
-        </main>
-    } [config footer]]
+    view::default
 }
 
 
@@ -152,46 +206,20 @@ proc wapp-page-search {} {
 
     set query [wapp-param query {}]
     if {[string length [string trim $query]] < [config min-length]} {
-        error-reply 400 "Query must be at least [config min-length]\
+        view::error 400 "Query must be at least [config min-length]\
                          characters long."
         return
     }
 
-    wapp-trim [config header]
-    wapp-trim {
-        <header><h1>Results for "%html($query)"</h1></header>
-        <main>
-        <ol>
-    }
-
-    set n 0
+    set results {}
     db eval [fts-query $startMatch $endMatch $query] values {
-        set dateTime [clock format $values(modified) \
-                                   -format {%Y-%m-%d} \
-                                   -timezone :Etc/UTC]
-        wapp-trim {
-            <li>
-                <dl>
-                    <dt>
-                        <a href="%html%($values(url))%">
-                            %html%($values(title))%</a>
-                        (modified %html($dateTime))
-                    </dt>
-                </dl>
-                <dd>
-        }
-        highlight-match $startMatch $endMatch $values(snippet)
-        wapp-trim </dd>\n</li>
-
-        incr n
+        lappend results $values(url) \
+                        $values(title) \
+                        $values(modified) \
+                        $values(snippet)
     }
 
-    wapp-trim </ol>
-    if {$n == 0} {
-        wapp-trim {No results.}
-    }
-    wapp-trim </main>
-    wapp-trim [config footer]
+    view::results $query $startMatch $endMatch $results
 }
 
 
