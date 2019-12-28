@@ -57,7 +57,11 @@ proc import::create-db {dest config} {
 
 
 proc import::tcl-file {srcPath destPath config} {
-    set dictList [fileutil::cat $srcPath]
+    set dictList [expr {
+        $srcPath eq {-}
+        ? [read stdin]
+        : [fileutil::cat $srcPath]
+    }]
     sqlite3 dest $destPath
 
     create-db dest $config
@@ -109,6 +113,7 @@ proc import::wiki {srcPath destPath config} {
             :values(content)
         )
     } [dict get $config table]]
+
     dest transaction {
         src eval $query values {
             dest eval $insertStatement
