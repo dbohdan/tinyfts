@@ -413,21 +413,6 @@ proc view::results::tcl {query startMatch endMatch results} {
 
 ### Controllers
 
-proc fts-query {startMatch endMatch query} {
-    return [format {
-        SELECT
-            url,
-            title,
-            modified,
-            snippet("%1$s", 3, :startMatch, :endMatch, '...', 20) AS snippet,
-            rank
-        FROM "%1$s"(:query)
-        WHERE rank > CAST(:start AS REAL)
-        ORDER BY rank ASC
-        LIMIT %2$u
-    } [config::get table] [config::get result-limit]]
-}
-
 
 namespace eval rate-limit {}
 
@@ -512,7 +497,27 @@ proc wapp-page-search {} {
 
     set results {}
     try {
-        db eval [fts-query $startMatch $endMatch $query] values {
+        set selectStatement [format {
+            SELECT
+                url,
+                title,
+                modified,
+                snippet(
+                    "%1$s",
+                    3,
+                    :startMatch,
+                    :endMatch,
+                    '...',
+                    20
+                ) AS snippet,
+                rank
+            FROM "%1$s"(:query)
+            WHERE rank > CAST(:start AS REAL)
+            ORDER BY rank ASC
+            LIMIT %2$u
+        } [config::get table] [config::get result-limit]]
+
+        db eval $selectStatement values {
             lappend results [array get values]
         }
     } on error {msg _} {
