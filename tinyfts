@@ -33,6 +33,7 @@ set state {
     css {}
     hidden-flags db-file
     rate {}
+    version 0.1.0
 }
 
 set config {
@@ -571,6 +572,11 @@ proc cli::usage me {
 
 
 proc cli::start {argv0 argv} {
+    if {$argv in {-v -version --version}} {
+        puts stderr [state::get version]
+        exit 0
+    }
+
     if {$argv in {/? -? -h -help --help}} {
         usage $argv0
         exit 0
