@@ -413,7 +413,7 @@ proc view::results::tcl {query startMatch endMatch results} {
 
 ### Controllers
 
-proc fts-query {startMatch endMatch query startRank} {
+proc fts-query {startMatch endMatch query} {
     return [format {
         SELECT
             url,
@@ -422,10 +422,10 @@ proc fts-query {startMatch endMatch query startRank} {
             snippet("%1$s", 3, :startMatch, :endMatch, '...', 20) AS snippet,
             rank
         FROM "%1$s"(:query)
-        WHERE rank > %3$f
+        WHERE rank > CAST(:start AS REAL)
         ORDER BY rank ASC
         LIMIT %2$u
-    } [config::get table] [config::get result-limit] $startRank]
+    } [config::get table] [config::get result-limit]]
 }
 
 
@@ -512,7 +512,7 @@ proc wapp-page-search {} {
 
     set results {}
     try {
-        db eval [fts-query $startMatch $endMatch $query $start] values {
+        db eval [fts-query $startMatch $endMatch $query] values {
             lappend results [array get values]
         }
     } on error {msg _} {
