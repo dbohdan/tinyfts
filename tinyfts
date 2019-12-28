@@ -562,8 +562,11 @@ proc cli::read-file args {
 
 
 proc cli::usage me {
-    set padding [string repeat { } [string length "usage: $me"]]
-    set options {}
+    set padding {   }
+    puts stderr "Usage:\n$padding $me --db-file path\
+                 \[option ...\] \[wapp-arg ...\]"
+    puts stderr Options:
+
     dict for {k v} $::config {
         if {$k in [state::get flags hide]} continue
 
@@ -576,12 +579,8 @@ proc cli::usage me {
             }
         }
 
-        lappend options "$padding \[--$k $default\]"
+        puts stderr "$padding --$k $default"
     }
-
-    puts stderr "usage: $me --db-file path"
-    puts stderr [join $options \n]
-    puts stderr "$padding \[wapp-arg ...\]"
 }
 
 
