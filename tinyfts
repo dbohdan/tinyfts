@@ -26,7 +26,7 @@ package require Tcl 8.6
 package require sqlite3 3.9
 
 
-### Configuration
+### Configuration and globals
 
 # The CSS stylesheet is loaded from a file in [start].
 set state {
@@ -260,13 +260,13 @@ proc view::results::json {query startMatch endMatch results} {
 
         set marked [extract-marked $startMatch $endMatch $r(snippet)]
         set snippetParts [lmap x $marked {
-            lindex \"[string2json $x]\"
+            lindex \"[string-to-json $x]\"
         }]
 
         wapp-trim {{
-            "url": "%unsafe%([string2json $r(url)])%",
-            "title": "%unsafe%([string2json $r(title)])%",
-            "modified": %unsafe%([string2json $r(modified)])%,
+            "url": "%unsafe%([string-to-json $r(url)])%",
+            "title": "%unsafe%([string-to-json $r(title)])%",
+            "modified": %unsafe%([string-to-json $r(modified)])%,
             "snippet": \[%unsafe%([join $snippetParts {, }])%\]
         }}
 
@@ -278,7 +278,7 @@ proc view::results::json {query startMatch endMatch results} {
 }
 
 
-proc view::results::string2json s {
+proc view::results::string-to-json s {
     return [string map {
         \x00 \\u0000
         \x01 \\u0001
