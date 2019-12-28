@@ -71,6 +71,12 @@ set config {
     rate-limit 60
 
     result-limit 100
+
+    log {
+        access
+        bad-request
+        error 
+    }
 }
 
 
@@ -108,6 +114,27 @@ proc accessor {name varName} {
 
 accessor config ::config
 accessor state ::state
+
+
+proc log {level {message {}}} {
+    if {$level ni [config::get log]} return
+
+    set timestamp [clock format [clock seconds] \
+                                -format %Y-%m-%dT%H:%M:%SZ \
+                                -timezone :Etc/UTC \
+    ]
+
+    puts \{[list \
+        timestamp $timestamp \
+        level $level \
+        REMOTE_ADDR [wapp-param REMOTE_ADDR] \
+        HTTP_USER_AGENT [wapp-param HTTP_USER_AGENT] \
+        url [join [list [wapp-param SELF_URL] [wapp-param PATH_TAIL]] /] \
+        QUERY_STRING [wapp-param QUERY_STRING] \
+        caller [dict get [info frame -1] proc] \
+        message $message \
+    ]\}
+}
 
 
 ### Views
@@ -406,7 +433,13 @@ proc rate-limit::allow? client {
         incr x
     }}}
 
-    if {[state::get rate $client count] > [config::get rate-limit]} {
+    set diff [expr {
+        [state::get rate $client count] - [config::get rate-limit]
+    }]
+    if {$diff > 0} {
+        if {$diff == 1} {
+            log warn {temporarily blocked remote address}
+        }
         return 0
     }
 
@@ -415,6 +448,8 @@ proc rate-limit::allow? client {
 
 
 proc wapp-default {} {
+    log access
+
     view::default
 }
 
@@ -437,6 +472,8 @@ proc wapp-page-search {} {
         return
     }
 
+    log access
+
     set startMatch %%%START_MATCH%%%
     set endMatch %%%END_MATCH%%%
 
@@ -445,12 +482,18 @@ proc wapp-page-search {} {
     set start [wapp-param start -1000000]
 
     if {$format ni {html json tcl}} {
-        view::error::html 400 {Unknown format.}
+        set msg {Unknown format.}
+        view::error::html 400 $msg
+        log bad-request $msg
+
         return
     }
     if {[string length [string trim $query]] < [config::get min-length]} {
-        view::error::$format 400 "Query must be at least [config::get min-length]\
-                                  characters long."
+        set msg "Query must be at least [config::get min-length]\
+                 characters long."
+        view::error::$format 400 $msg
+        log bad-request $msg
+
         return
     }
 
@@ -461,6 +504,8 @@ proc wapp-page-search {} {
         }
     } on error {msg _} {
         view::error::$format 400 $msg
+        log error $msg
+
         return
     }
 

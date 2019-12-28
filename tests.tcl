@@ -126,7 +126,8 @@ set td(pid) [tclsh tinyfts --db-file $td(dbFile) \
                                      --rate-limit 10 \
                                      --result-limit 3 \
                                      --min-length 3 \
-                  & \
+                                     --log {} \
+                   & \
 ]
 for {set i 0} {$i < 10} {incr i} {
     if {![catch {
