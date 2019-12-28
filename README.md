@@ -20,7 +20,7 @@ The above and
 On recent Debian and Ubuntu install the dependencies with
 
 ```none
-sudo apt install tcl tcllib libsqlite3-tcl
+sudo apt install curl libsqlite3-tcl sqlite3 tcl tcllib
 ```
 
 ## License
