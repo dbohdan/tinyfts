@@ -79,6 +79,8 @@ set config {
         error
         rate
     }
+
+    behind-reverse-proxy false
 }
 
 
@@ -129,13 +131,22 @@ proc log {type {message {}}} {
     puts \{[list \
         timestamp $timestamp \
         type $type \
-        REMOTE_ADDR [wapp-param REMOTE_ADDR] \
+        remote [real-remote] \
         HTTP_USER_AGENT [wapp-param HTTP_USER_AGENT] \
         url [join [list [wapp-param SELF_URL] [wapp-param PATH_TAIL]] /] \
         QUERY_STRING [wapp-param QUERY_STRING] \
         caller [dict get [info frame -1] proc] \
         message $message \
     ]\}
+}
+
+
+proc real-remote {} {
+    if {[config::get behind-reverse-proxy]} {
+        return [wapp-param .hdr:X-REAL-IP [wapp-param .hdr:X-Forwarded-For {}]]
+    } else {
+        return [wapp-param REMOTE_ADDR]
+    }
 }
 
 
@@ -465,7 +476,7 @@ proc wapp-page-css {} {
 proc wapp-page-search {} {
     wapp-allow-xorigin-params
 
-    if {![rate-limit::allow? [wapp-param REMOTE_ADDR]]} {
+    if {![rate-limit::allow? [real-remote]]} {
         wapp-mimetype text/plain
         wapp-reply-code 403
 
