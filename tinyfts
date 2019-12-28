@@ -118,8 +118,8 @@ accessor config ::config
 accessor state ::state
 
 
-proc log {level {message {}}} {
-    if {$level ni [config::get log]} return
+proc log {type {message {}}} {
+    if {$type ni [config::get log]} return
 
     set timestamp [clock format [clock seconds] \
                                 -format %Y-%m-%dT%H:%M:%SZ \
@@ -128,7 +128,7 @@ proc log {level {message {}}} {
 
     puts \{[list \
         timestamp $timestamp \
-        level $level \
+        type $type \
         REMOTE_ADDR [wapp-param REMOTE_ADDR] \
         HTTP_USER_AGENT [wapp-param HTTP_USER_AGENT] \
         url [join [list [wapp-param SELF_URL] [wapp-param PATH_TAIL]] /] \
