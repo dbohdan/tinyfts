@@ -120,19 +120,19 @@ tcltest::test tools-import-2.3 {} -cleanup $td(cleanup) -body {
 set td(port) [expr 8000+int(rand()*1000)]
 tclsh tools/import tcl - $td(dbFile) << $td(sample)
 set td(pid) [tclsh tinyfts --db-file $td(dbFile) \
-                                     --server $td(port) \
-                                     --title Hello \
-                                     --subtitle World \
-                                     --rate-limit 10 \
-                                     --result-limit 3 \
-                                     --min-length 3 \
-                                     --log {} \
-                   & \
+                           --server $td(port) \
+                           --title Hello \
+                           --subtitle World \
+                           --rate-limit 10 \
+                           --result-limit 3 \
+                           --min-length 3 \
+                           --log {} \
+                           & \
 ]
 for {set i 0} {$i < 10} {incr i} {
-    if {![catch {
+    try {
         curl http://127.0.0.1:$td(port)
-    }]} break
+    } on ok _ break on error _ {}
     after [expr {$i * 10}]
 }
 unset i
