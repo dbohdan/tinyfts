@@ -247,6 +247,15 @@ proc view::results::html {query startMatch endMatch results} {
     }
     wapp-trim </main>
 
+    if {[llength $results] == [config::get result-limit]} {
+        set next [dict get [lindex $results end] rank]
+        wapp-trim {
+            <footer>
+                <a href="/search?query=%html($query)&start=%html($next)">Next page</a>
+            </footer>
+        }
+    }
+
     wapp-trim [config::get footer]
 }
 
@@ -254,7 +263,14 @@ proc view::results::html {query startMatch endMatch results} {
 proc view::results::json {query startMatch endMatch results} {
     wapp-mimetype application/json
 
-    wapp "\{\"results\": \["
+    wapp \{\n
+
+    if {[llength $results] == [config::get result-limit]} {
+        set next [dict get [lindex $results end] rank]
+        wapp-subst {"next": "%string($next)",\n}
+    }
+
+    wapp {"results": [}
     for {set i 0} {$i < [llength $results]} {incr i} {
         array set r [lindex $results $i]
 
@@ -274,6 +290,7 @@ proc view::results::json {query startMatch endMatch results} {
             wapp ,
         }
     }
+
     wapp \]\}
 }
 
@@ -322,8 +339,18 @@ proc view::results::string-to-json s {
 proc view::results::tcl {query startMatch endMatch results} {
     wapp-mimetype text/plain
 
+    if {[llength $results] == [config::get result-limit]} {
+        set next [dict get [lindex $results end] rank]
+        wapp [list next $next]\n
+    }
+
     wapp "results \{"
+
+    set first true
     foreach result $results {
+        if {!$first} {
+            wapp { }
+        }
         wapp \{\n
 
         foreach key {url title modified} {
@@ -335,25 +362,30 @@ proc view::results::tcl {query startMatch endMatch results} {
                                    [dict get $result snippet]]
         wapp "    [list snippet $marked]"
 
-        wapp "\n\} "
+        wapp \n\}
+
+        set first false
     }
+
     wapp \}\n
 }
 
 
 ### Controllers
 
-proc fts-query {startMatch endMatch query} {
+proc fts-query {startMatch endMatch query startRank} {
     return [format {
         SELECT
             url,
             title,
             modified,
-            snippet("%1$s", 3, :startMatch, :endMatch, '...', 20) AS snippet
+            snippet("%1$s", 3, :startMatch, :endMatch, '...', 20) AS snippet,
+            rank
         FROM "%1$s"(:query)
+        WHERE rank > %3$f
         ORDER BY rank ASC
         LIMIT %2$u
-    } [config::get table] [config::get result-limit]]
+    } [config::get table] [config::get result-limit] $startRank]
 }
 
 
@@ -408,8 +440,10 @@ proc wapp-page-search {} {
     set startMatch %%%START_MATCH%%%
     set endMatch %%%END_MATCH%%%
 
-    set query [wapp-param query {}]
     set format [wapp-param format html]
+    set query [wapp-param query {}]
+    set start [wapp-param start -1000000]
+
     if {$format ni {html json tcl}} {
         view::error::html 400 {Unknown format.}
         return
@@ -422,7 +456,7 @@ proc wapp-page-search {} {
 
     set results {}
     try {
-        db eval [fts-query $startMatch $endMatch $query] values {
+        db eval [fts-query $startMatch $endMatch $query $start] values {
             lappend results [array get values]
         }
     } on error {msg _} {

@@ -47,6 +47,18 @@ set td(sample) {
         modified 3
         content {My life got flipped turned upside down}
     }
+    {
+        url https://fts.example.com/qux
+        title Qux
+        modified 4
+        content {Don't quote}
+    }
+    {
+        url https://fts.example.com/quux
+        title Quux
+        modified 5
+        content {too much}
+    }
 }
 
 
@@ -112,6 +124,7 @@ set td(pid) [tclsh tinyfts --db-file $td(dbFile) \
                                      --title Hello \
                                      --subtitle World \
                                      --rate-limit 10 \
+                                     --result-limit 3 \
                                      --min-length 3 \
                   & \
 ]
@@ -151,12 +164,24 @@ tcltest::test search-1.3 {Tcl result} -cleanup {unset raw} -body {
            modified 1\
            snippet {{Now this is a story} {}}}
 
-tcltest::test search-1.4 {Tcl result} -cleanup {unset raw} -body {
-    set raw [curl $td(query)=fts&format=tcl]
+tcltest::test search-1.4 {3 results} -cleanup {unset raw} -body {
+    set raw [curl $td(query)=fts+NOT+Qu*&format=tcl]
     lsort [lmap x [dict get $raw results] {
         dict get $x title
     }]
 } -result {Bar Baz Foo}
+
+tcltest::test search-1.5 {Pagination} -cleanup {
+    unset next raw1 raw2
+} -body {
+    set raw1 [curl $td(query)=fts&format=tcl]
+    set next [dict get $raw1 next]
+    set raw2 [curl $td(query)=fts&format=tcl&start=$next]
+
+    lsort [lmap x [concat [dict get $raw1 results] [dict get $raw2 results]] {
+        dict get $x title
+    }]
+} -result {Bar Baz Foo Quux Qux}
 
 
 tcltest::test search-2.1 {No results} -body {
