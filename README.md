@@ -27,5 +27,5 @@ sudo apt install tcl tcllib libsqlite3-tcl
 
 MIT.  [Wapp](wapp.tcl.tk/) is copyright (c) 2017 D. Richard Hipp and is
 distributed under the Simplified BSD License.
-[awsm.css](https://github.com/igoradamenko/awsm.css/) is copyright (c) 2015
-Igor Adamenko and is distributed under the MIT license.
+[Tacit](https://github.com/yegor256/tacit) is copyright (c) 2015-2019
+Yegor Bugayenko and is distributed under the MIT license.
