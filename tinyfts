@@ -1,5 +1,5 @@
 #! /usr/bin/env tclsh
-# tinyfts: a very small self-contained full text search HTTP server.
+# tinyfts: a very small standalone full text search HTTP server.
 # ==============================================================================
 # Copyright (c) 2019 D. Bohdan and contributors listed in AUTHORS
 #

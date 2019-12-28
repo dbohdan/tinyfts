@@ -1,6 +1,6 @@
 # tinyfts
 
-A very small self-contained full text search HTTP server.
+A very small standalone full text search HTTP server.
 
 ## Dependencies
 
