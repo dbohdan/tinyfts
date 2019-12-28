@@ -31,7 +31,11 @@ package require sqlite3 3.9
 # The CSS stylesheet is loaded from a file in [start].
 set state {
     css {}
-    hidden-flags db-file
+    flags {
+        hide db-file
+        omit-default {header footer}
+    }
+
     rate {}
     version 0.1.0
 }
@@ -558,16 +562,26 @@ proc cli::read-file args {
 
 
 proc cli::usage me {
+    set padding [string repeat { } [string length "usage: $me"]]
     set options {}
     dict for {k v} $::config {
-        if {$k in [state::get hidden-flags]} continue
-        set line "\[--$k value\]"
+        if {$k in [state::get flags hide]} continue
 
-        lappend options $line
+        if {$k in [state::get flags omit-default]} {
+            set default ...
+        } else {
+            set default [list {*}$v]
+            if {[regexp {\s} $default]} {
+                set default '$default'
+            }
+        }
+
+        lappend options "$padding \[--$k $default\]"
     }
 
-    puts stderr "usage: $me --db-file path\
-                 [join $options { }] \[wapp-arg ...\]"
+    puts stderr "usage: $me --db-file path"
+    puts stderr [join $options \n]
+    puts stderr "$padding \[wapp-arg ...\]"
 }
 
 
