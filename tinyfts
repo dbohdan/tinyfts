@@ -131,12 +131,12 @@ proc log {type {message {}}} {
     puts \{[list \
         timestamp $timestamp \
         type $type \
-        remote [real-remote] \
-        HTTP_USER_AGENT [wapp-param HTTP_USER_AGENT] \
-        url [join [list [wapp-param SELF_URL] [wapp-param PATH_TAIL]] /] \
-        QUERY_STRING [wapp-param QUERY_STRING] \
         caller [dict get [info frame -1] proc] \
         message $message \
+        remote [real-remote] \
+        url [join [list [wapp-param SELF_URL] [wapp-param PATH_TAIL]] /] \
+        query-string [wapp-param QUERY_STRING] \
+        user-agent [wapp-param HTTP_USER_AGENT] \
     ]\}
 }
 
