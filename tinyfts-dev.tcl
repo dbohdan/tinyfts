@@ -558,6 +558,8 @@ proc wapp-page-search {} {
             lappend results [array get values]
         }
     } on error {msg _} {
+        regsub ^fts5: $msg {Invalid query:} msg
+
         view::error::$format 400 $msg
         log error $msg
 
