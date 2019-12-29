@@ -668,7 +668,6 @@ proc cli::start {argv0 argv} {
         wapp-start $wappArgs
     } on error {msg opts} {
         puts stderr "startup error: [dict get $opts -errorinfo]"
-        usage $argv0
         exit 1
     }
 }
