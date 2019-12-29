@@ -465,10 +465,10 @@ proc rate-limit::allow? client {
     set diff [expr {
         [state::get rate $client count] - [config::get rate-limit]
     }]
+    if {$diff == 1} {
+        log rate {temporarily blocked remote address}
+    }
     if {$diff > 0} {
-        if {$diff == 1} {
-            log rate {temporarily blocked remote address}
-        }
         return 0
     }
 
