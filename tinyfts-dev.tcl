@@ -251,16 +251,16 @@ proc view::results::html {query startMatch endMatch results counter} {
     wapp-subst {\n<ol start="%html($counter)">\n}
 
     foreach result $results {
-        set dateTime [clock format [dict get $result modified] \
-                                   -format {%Y-%m-%d} \
-                                   -timezone :Etc/UTC]
+        set date [clock format [dict get $result modified] \
+                                -format {%Y-%m-%d} \
+                                -timezone :Etc/UTC]
         wapp-trim {
             <li>
                 <dl>
                     <dt>
                         <a href="%html([dict get $result url])">
                             %html([dict get $result title])</a>
-                        (modified %html($dateTime))
+                        (modified %html($date))
                     </dt>
                 </dl>
                 <dd>
