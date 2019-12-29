@@ -155,6 +155,13 @@ proc real-remote {} {
 }
 
 
+proc gensym {} {
+    return [format sym-%u-%08x \
+                   [clock seconds] \
+                   [expr {int(4294967296*rand())}]]
+}
+
+
 ### Views
 
 namespace eval view {
@@ -496,8 +503,8 @@ proc wapp-page-search {} {
 
     log access
 
-    set startMatch %%%START_MATCH%%%
-    set endMatch %%%END_MATCH%%%
+    set startMatch [gensym]
+    set endMatch [gensym]
 
     set format [wapp-param format html]
     set query [wapp-param query {}]
