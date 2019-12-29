@@ -244,11 +244,11 @@ proc view::results::extract-marked {startMarker endMarker text} {
 }
 
 
-proc view::results::html {query startMatch endMatch results} {
+proc view::results::html {query startMatch endMatch results counter} {
     wapp-trim [config::get header]
     wapp \n<main>
     form $query
-    wapp \n<ol>\n
+    wapp-subst {\n<ol start="%html($counter)">\n}
 
     foreach result $results {
         set dateTime [clock format [dict get $result modified] \
@@ -286,11 +286,11 @@ proc view::results::html {query startMatch endMatch results} {
 
     if {[llength $results] == [config::get result-limit]} {
         set next [dict get [lindex $results end] rank]
-        wapp-trim {
-            <footer>
-                <a href="/search?query=%html($query)&start=%html($next)">Next page</a>
-            </footer>
-        }
+        set nextCounter [expr {$counter + [llength $results]}]
+        wapp \n<footer>\n
+        wapp-subst {<a href="/search?query=%html($query)&start=%html($next)}
+        wapp-subst {&counter=%html($nextCounter)">Next page</a>}
+        wapp \n</footer>\n
     }
 
     wapp-trim [config::get footer]
@@ -487,6 +487,7 @@ proc wapp-page-search {} {
     set format [wapp-param format html]
     set query [wapp-param query {}]
     set start [wapp-param start -1000000]
+    set counter [wapp-param counter 1]
 
     if {$format ni {html json tcl}} {
         set msg {Unknown format.}
@@ -498,6 +499,13 @@ proc wapp-page-search {} {
     if {[string length [string trim $query]] < [config::get min-length]} {
         set msg "Query must be at least [config::get min-length]\
                  characters long."
+        view::error::$format 400 $msg
+        log bad-request $msg
+
+        return
+    }
+    if {![string is integer -strict $counter] || $counter <= 0} {
+        set msg {"counter" must be a positive integer.}
         view::error::$format 400 $msg
         log bad-request $msg
 
@@ -536,7 +544,11 @@ proc wapp-page-search {} {
         return
     }
 
-    view::results::$format $query $startMatch $endMatch $results
+    set viewArgs [list $query $startMatch $endMatch $results]
+    if {$format eq {html}} {
+        lappend viewArgs $counter
+    }
+    view::results::$format {*}$viewArgs
 }
 
 
