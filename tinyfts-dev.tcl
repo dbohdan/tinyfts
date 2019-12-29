@@ -644,8 +644,7 @@ proc cli::start {argv0 argv} {
         }
 
         if {[config::get db-file] eq {}} {
-            usage $argv0
-            exit 1
+            error {no --db-file given}
         }
 
         sqlite3 db [config::get db-file] -create false -readonly true
