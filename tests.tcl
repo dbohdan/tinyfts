@@ -184,6 +184,10 @@ tcltest::test search-1.5 {Pagination} -cleanup {
     }]
 } -result {Bar Baz Foo Quux Qux}
 
+tcltest::test search-1.6 {Document title} -body {
+    curl $td(query)=foo&format=html
+} -match glob -result {*<title>foo | Hello</title>*}
+
 
 tcltest::test search-2.1 {No results} -body {
     curl $td(query)=111

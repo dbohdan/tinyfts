@@ -51,7 +51,7 @@ set config {
         <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-            <title>%html([config::get title])</title>
+            <title>%html($documentTitle)</title>
             <link rel="stylesheet" type="text/css" href="/css">
         </head>
         <body>
@@ -162,6 +162,21 @@ namespace eval view {
 }
 
 
+proc view::header pageTitle {
+    set documentTitle [config::get title]
+    if {$pageTitle ne {}} {
+        set documentTitle "$pageTitle | $documentTitle"
+    }
+
+    wapp-trim [config::get header]
+}
+
+
+proc view::footer {} {
+    wapp-trim [config::get footer]
+}
+
+
 proc view::form query {
     wapp-trim {
         <form action="/search">
@@ -173,7 +188,7 @@ proc view::form query {
 
 
 proc view::default {} {
-    wapp-trim [config::get header]
+    header {}
     wapp-trim {
         <header>
             <h1>%html([config::get title])</h1>
@@ -183,7 +198,7 @@ proc view::default {} {
     }
     form {}
     wapp </main>
-    wapp-trim [config::get footer]
+    footer
 }
 
 
@@ -195,9 +210,9 @@ namespace eval view::error {
 proc view::error::html {code message} {
     wapp-reply-code $code
 
-    wapp-trim [config::get header]
+    header {}
     wapp-trim {<header><h1>Error</h1><p>%html($message)</p></header>}
-    wapp-trim [config::get footer]
+    footer
 }
 
 
@@ -245,7 +260,7 @@ proc view::results::extract-marked {startMarker endMarker text} {
 
 
 proc view::results::html {query startMatch endMatch results counter} {
-    wapp-trim [config::get header]
+    header $query
     wapp \n<main>
     form $query
     wapp-subst {\n<ol start="%html($counter)">\n}
@@ -293,7 +308,7 @@ proc view::results::html {query startMatch endMatch results counter} {
         wapp \n</footer>\n
     }
 
-    wapp-trim [config::get footer]
+    footer
 }
 
 
