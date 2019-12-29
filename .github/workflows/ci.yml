@@ -8,6 +8,8 @@ jobs:
       run: sudo apt install curl libsqlite3-tcl sqlite3 tcl tcllib
     - name: Checkout
       uses: actions/checkout@v1
+    - name: Build
+      run: make tinyfts
     - name: Run tests
-      run: tclsh tests.tcl
+      run: make test
     
