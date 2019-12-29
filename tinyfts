@@ -228,21 +228,16 @@ proc view::results::extract-marked {startMarker endMarker text} {
     set all {}
 
     set start 0
-    while {[regexp -start $start \
-                   -indices \
-                   $re \
-                   $text \
-                   _ \
-                   before marked]} {
+    while {[regexp -start $start -indices $re $text _ before marked]} {
         lappend all [string range $text {*}$before] \
                     [string range $text {*}$marked]
 
         set start [expr {[lindex $marked 1] + [string length $endMarker] + 1}]
     }
 
-    set remainer [string range $text $start end]
-    if {$remainer ne {}} {
-        lappend all $remainer {}
+    set remainder [string range $text $start end]
+    if {$remainder ne {}} {
+        lappend all $remainder {}
     }
 
     return $all
