@@ -653,8 +653,9 @@ proc cli::start {argv0 argv} {
             state::set css [read-file [config::get css-file]]
         }
 
-        # Only [source] Wapp if it is not present.
-        if {[info commands wapp] ne {wapp}} {
+        try {
+            package present wapp
+        } trap {TCL LOOKUP PACKAGE wapp} _ {
             uplevel 1 {source vendor/wapp/wapp.tcl}
         }
 
