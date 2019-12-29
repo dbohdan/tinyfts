@@ -11,18 +11,19 @@ A very small standalone full text search HTTP server.
 * Tcl 8.6
 * tclsqlite3 with [FTS5](https://sqlite.org/fts5.html)
 
-### Tools and tests
+### Building, tools, and tests
 
 The above and
 * Tcllib
 * curl(1)
 * kill(1)
+* make(1)
 * sqlite3(1)
 
 On recent Debian and Ubuntu install the dependencies with
 
 ```none
-sudo apt install curl libsqlite3-tcl sqlite3 tcl tcllib
+sudo apt install curl libsqlite3-tcl make sqlite3 tcl tcllib
 ```
 
 ## License

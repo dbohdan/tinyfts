@@ -43,7 +43,7 @@ set state {
 set config {
     db-file {}
 
-    css-file vendor/tacit/tacit-css.min.css
+    css-file {}
 
     header {
         <!DOCTYPE html>
@@ -620,7 +620,14 @@ proc cli::start {argv0 argv} {
         }
 
         sqlite3 db [config::get db-file] -create false -readonly true
-        dict set ::state css [read-file [config::get css-file]]
+        if {[config::get css-file] eq {}} {
+            # Is CSS already loaded?
+            if {[state::get-default {} css] eq {}} {
+                state::set css [read-file vendor/tacit/tacit-css.min.css]
+            }
+        } else {
+            state::set css [read-file [config::get css-file]]
+        }
 
         wapp-start $wappArgs
     } on error {msg opts} {

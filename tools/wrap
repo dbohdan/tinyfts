@@ -1,0 +1,75 @@
+#! /usr/bin/env tclsh
+# Store any data in Tcl source code.
+# ==============================================================================
+# Copyright (c) 2019 D. Bohdan and contributors listed in AUTHORS
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+# ==============================================================================
+
+package require Tcl 8.6
+package require fileutil 1
+
+namespace eval wrap {}
+
+
+proc wrap::escape-char c {
+    if {$c in {\n \t}} {
+        return $c
+    }
+
+    if {$c in {\{ \} [ ] $ \\}} {
+        return \\$c
+    }
+
+    if {[set code [scan $c %c]] < 32} {
+        return \\u[format %04x $code]
+    }
+
+    return $c  
+}
+
+
+proc wrap::escape data {
+    set charCodes [lmap c [split $data {}] {
+        escape-char $c
+    }]
+
+    return "subst -nocommands -novariables\
+            \{[encoding convertto utf-8 [join $charCodes {}]]\}"
+}
+
+
+proc wrap::main {src namespace {prefix {variable data}}} {
+    set data [expr {
+        $src eq {-}
+        ? [fconfigure stdin -translation binary read stdin]
+        : [fileutil::cat -translation binary $src]
+    }]
+
+    fconfigure stdout -translation binary
+    puts "namespace eval [list $namespace] \{"
+    puts "$prefix \[[escape $data]\]"
+    puts \}
+}
+
+
+# If this is the main script...
+if {[info exists argv0] && ([file tail [info script]] eq [file tail $argv0])} {
+    wrap::main {*}$argv
+}
