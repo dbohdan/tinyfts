@@ -250,7 +250,6 @@ proc view::results::html {query startMatch endMatch results} {
     form $query
     wapp \n<ol>\n
 
-    set n 0
     foreach result $results {
         set dateTime [clock format [dict get $result modified] \
                                    -format {%Y-%m-%d} \
@@ -274,15 +273,13 @@ proc view::results::html {query startMatch endMatch results} {
             wapp-trim {
                 %html($before)<strong>%html($marked)</strong>
             }
-
-            incr n
         }
 
         wapp-trim </dd>\n</li>
     }
 
     wapp-trim </ol>
-    if {$n == 0} {
+    if {[llength $results] == 0} {
         wapp-trim {No results.}
     }
     wapp-trim </main>
