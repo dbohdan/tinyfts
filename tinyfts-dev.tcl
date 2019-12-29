@@ -28,9 +28,9 @@ package require sqlite3 3.9
 
 ### Configuration and globals
 
-# The CSS stylesheet is loaded from a file in [start].
 set state {
     css {}
+
     flags {
         hide db-file
         omit-default {header footer}
