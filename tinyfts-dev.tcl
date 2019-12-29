@@ -489,27 +489,23 @@ proc wapp-page-search {} {
     set start [wapp-param start -1000000]
     set counter [wapp-param counter 1]
 
-    if {$format ni {html json tcl}} {
-        set msg {Unknown format.}
-        view::error::html 400 $msg
-        log bad-request $msg
+    foreach {badParamCheck msgTemplate} {
+        {$format ni {html json tcl}}
+        {Unknown format.}
 
-        return
-    }
-    if {[string length [string trim $query]] < [config::get min-length]} {
-        set msg "Query must be at least [config::get min-length]\
-                 characters long."
-        view::error::$format 400 $msg
-        log bad-request $msg
+        {[string length [string trim $query]] < [config::get min-length]}
+        {Query must be at least [config::get min-length] characters long.}
 
-        return
-    }
-    if {![string is integer -strict $counter] || $counter <= 0} {
-        set msg {"counter" must be a positive integer.}
-        view::error::$format 400 $msg
-        log bad-request $msg
+        {![string is integer -strict $counter] || $counter <= 0}
+        {"counter" must be a positive integer.}
+    } {
+        if $badParamCheck {
+            set msg [subst $msgTemplate]
+            view::error::html 400 $msg
+            log bad-request $msg
 
-        return
+            return
+        }
     }
 
     set results {}
