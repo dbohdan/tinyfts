@@ -9,4 +9,7 @@ tinyfts: Makefile tools/wrap tinyfts-dev.tcl vendor/tacit/tacit-css.min.tcl vend
 vendor/tacit/tacit-css.min.tcl: vendor/tacit/tacit-css.min.css Makefile tools/wrap
 	./tools/wrap $< tinyfts 'dict set state css' > $@
 
-.PHONY: tests
+clean:
+	-rm tinyfts vendor/tacit/tacit-css.min.tcl
+
+.PHONY: clean test
