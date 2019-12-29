@@ -123,7 +123,7 @@ set td(pid) [tclsh tinyfts --db-file $td(dbFile) \
                            --server $td(port) \
                            --title Hello \
                            --subtitle World \
-                           --rate-limit 10 \
+                           --rate-limit 20 \
                            --result-limit 3 \
                            --min-length 3 \
                            --log {} \
@@ -200,6 +200,13 @@ tcltest::test search-2.2 {Unknown format} -body {
 tcltest::test search-2.3 {Short query} -body {
     curl $td(query)=xy
 } -match glob -result {*Query must be at least 3 characters long.*}
+
+tcltest::test search-2.4 {Hit rate limit} -cleanup {unset i result} -body {
+    for {set i 0} {$i < 20} {incr i} {
+        set result [curl $td(query)=nope]
+    }
+    set result
+} -result {Access denied.}
 
 
 kill $td(pid)
