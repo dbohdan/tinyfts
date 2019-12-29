@@ -624,7 +624,6 @@ proc cli::start {argv0 argv} {
 
     try {
         cd [file dirname [info script]]
-        uplevel 1 {source vendor/wapp/wapp.tcl}
 
         set wappArgs {}
         foreach {flag v} $argv {
@@ -643,13 +642,20 @@ proc cli::start {argv0 argv} {
         }
 
         sqlite3 db [config::get db-file] -create false -readonly true
+
         if {[config::get css-file] eq {}} {
-            # Is CSS already loaded?
+            # Only read the default CSS file if no CSS is not already loaded
+            # (like it is in a bundle).
             if {[state::get-default {} css] eq {}} {
                 state::set css [read-file vendor/tacit/tacit-css.min.css]
             }
         } else {
             state::set css [read-file [config::get css-file]]
+        }
+
+        # Only [source] Wapp if it is not present.
+        if {[info commands wapp] ne {wapp}} {
+            uplevel 1 {source vendor/wapp/wapp.tcl}
         }
 
         wapp-start $wappArgs
