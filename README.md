@@ -2,7 +2,7 @@
 
 ![CI badge](https://github.com/dbohdan/tinyfts/workflows/CI/badge.svg)
 
-A very small standalone full text search HTTP server.
+A very small standalone full-text search HTTP server.
 
 ## Dependencies
 
