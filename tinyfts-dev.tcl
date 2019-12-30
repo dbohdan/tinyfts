@@ -612,7 +612,7 @@ proc cli::usage me {
             set default <HTML>
         } else {
             set default [list {*}$v]
-            if {[regexp {\s} $default]} {
+            if {$default eq {} || [regexp {\s} $default]} {
                 set default '$default'
             }
         }
