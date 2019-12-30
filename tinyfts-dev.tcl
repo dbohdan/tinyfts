@@ -88,6 +88,8 @@ set config {
     }
 
     behind-reverse-proxy false
+
+    snippet-size 20
 }
 
 
@@ -545,14 +547,16 @@ proc wapp-page-search {} {
                     :startMatch,
                     :endMatch,
                     '...',
-                    20
+                    %3$u
                 ) AS snippet,
                 rank
             FROM "%1$s"(:query)
             WHERE rank > CAST(:start AS REAL)
             ORDER BY rank ASC
             LIMIT %2$u
-        } [config::get table] [config::get result-limit]]
+        } [config::get table] \
+          [config::get result-limit] \
+          [config::get snippet-size]]
 
         db eval $selectStatement values {
             lappend results [array get values]
