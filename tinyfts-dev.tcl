@@ -249,7 +249,7 @@ namespace eval view::results {
 
 
 proc view::results::extract-marked {startMarker endMarker text} {
-    set re (.*?)${startMarker}(.*?)${endMarker}(.)
+    set re (.*?)${startMarker}(.*?)${endMarker}
 
     set all {}
 
