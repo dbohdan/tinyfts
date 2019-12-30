@@ -33,7 +33,7 @@ set state {
 
     flags {
         hide db-file
-        omit-default {header footer subtitle}
+        html-value {header footer subtitle}
     }
 
     rate {}
@@ -608,8 +608,8 @@ proc cli::usage me {
     dict for {k v} $::config {
         if {$k in [state::get flags hide]} continue
 
-        if {$k in [state::get flags omit-default]} {
-            set default ...
+        if {$k in [state::get flags html-value]} {
+            set default <HTML>
         } else {
             set default [list {*}$v]
             if {[regexp {\s} $default]} {
