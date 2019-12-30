@@ -26,14 +26,30 @@ package require Tcl 8.6
 package require fileutil 1
 
 
+proc padding {formatString value target char} {
+    set len [string length [format $formatString $value {} {}]]
+
+    set paddingLeft [string repeat = [expr {
+        ($target - $len) / 2
+    }]]
+    set paddingRight [string repeat = [expr {
+        $target - $len - [string length $paddingLeft]
+    }]]
+
+    return [list $paddingLeft $paddingRight]
+}
+
+
 proc titlecat args {
-    set format {# %2$s file: %1$s %2$s}
+    set format {#%2$s file: %1$s%3$s}
     fconfigure stdout -translation binary
 
     foreach file $args {
-        set len [string length [format $format $file {}]]
-        set padding [string repeat = [expr {(80 - $len) / 2}]]
-        puts [format $format $file $padding]
+        lassign [padding $format [list $file] 80 =] paddingLeft paddingRight
+        foreach varName {paddingLeft paddingRight} {
+            regsub ^. [set $varName] { } $varName
+        }
+        puts [format $format [list $file] $paddingLeft $paddingRight]
 
         puts -nonewline [fileutil::cat -translation binary $file]
     }
