@@ -33,7 +33,7 @@ set state {
 
     flags {
         hide db-file
-        omit-default {header footer}
+        omit-default {header footer subtitle}
     }
 
     rate {}
@@ -67,7 +67,9 @@ set config {
     }
 
     subtitle {
-        Full-text search
+        Full-text search.
+        <a href="https://www.sqlite.org/fts5.html#full_text_query_syntax">Query
+        syntax</a>.
     }
 
     table tinyfts
@@ -199,7 +201,7 @@ proc view::default {} {
     wapp-trim {
         <header>
             <h1>%html([config::get title])</h1>
-            <p>%html([config::get subtitle])</p>
+            <p>%unsafe([config::get subtitle])</p>
         </header>
         <main>
     }
