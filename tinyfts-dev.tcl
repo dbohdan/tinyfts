@@ -51,7 +51,7 @@ set config {
         <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-            <title>%html($documentTitle)</title>
+            <title>$documentTitle</title>
             <link rel="stylesheet" type="text/css" href="/css">
         </head>
         <body>
@@ -179,12 +179,13 @@ proc view::header pageTitle {
         set documentTitle "$pageTitle | $documentTitle"
     }
 
-    wapp-trim [config::get header]
+    set map [list \$documentTitle [wappInt-enc-html $documentTitle]]
+    wapp-unsafe [string map $map [config::get header]]
 }
 
 
 proc view::footer {} {
-    wapp-trim [config::get footer]
+    wapp-unsafe [config::get footer]
 }
 
 
@@ -359,12 +360,10 @@ proc view::results::json {query startMatch endMatch results} {
 
             set firstMarked false
         }
-
         wapp \]\n\}
 
         set first false
     }
-
 
     wapp \]\}\n
 }
