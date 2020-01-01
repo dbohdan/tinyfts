@@ -415,7 +415,7 @@ proc view::results::tcl {query startMatch endMatch results} {
 
     if {[llength $results] == [config::get result-limit]} {
         set next [dict get [lindex $results end] rank]
-        wapp [list next $next]\n
+        wapp-unsafe [list next $next]\n
     }
 
     wapp "results \{"
@@ -428,13 +428,13 @@ proc view::results::tcl {query startMatch endMatch results} {
         wapp \{\n
 
         foreach key {url title modified} {
-            wapp "    $key [list [dict get $result $key]]\n"
+            wapp-unsafe "    $key [list [dict get $result $key]]\n"
         }
 
         set marked [extract-marked $startMatch \
                                    $endMatch \
                                    [dict get $result snippet]]
-        wapp "    [list snippet $marked]"
+        wapp-unsafe "    [list snippet $marked]"
 
         wapp \n\}
 
@@ -488,7 +488,7 @@ proc wapp-default {} {
 
 proc wapp-page-css {} {
     wapp-mimetype text/css
-    wapp [state::get css]
+    wapp-unsafe [state::get css]
 }
 
 
