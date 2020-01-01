@@ -28,7 +28,7 @@ sudo apt install curl libsqlite3-tcl make sqlite3 tcl tcllib
 
 ## License
 
-MIT.  [Wapp](wapp.tcl.tk/) is copyright (c) 2017 D. Richard Hipp and is
+MIT.  [Wapp](https://wapp.tcl.tk/) is copyright (c) 2017 D. Richard Hipp and is
 distributed under the Simplified BSD License.
 [Tacit](https://github.com/yegor256/tacit) is copyright (c) 2015-2019
 Yegor Bugayenko and is distributed under the MIT license.
