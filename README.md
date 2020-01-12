@@ -23,12 +23,23 @@ The above and
 
 On recent Debian and Ubuntu install the dependencies with
 
-```none
+```sh
 sudo apt install curl libsqlite3-tcl make sqlite3 tcl tcllib
+```
+
+On FreeBSD with sudo install the dependencies with
+
+```sh
+sudo pkg install curl sqlite3 tcl-sqlite3 tcl86 tcllib
+cd /usr/local/bin
+sudo ln -s tclsh8.6 tclsh
 ```
 
 
 ## Setup example
+
+The following instructions should work on most Linux distributions and FreeBSD
+with the dependencies and Git installed.
 
 1\. Go to <https://sourceforge.net/project/showfiles.php?group_id=211498>.
 Download and extract the last [Wikit](https://wiki.tcl-lang.org/page/Wikit)
