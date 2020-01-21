@@ -2,7 +2,7 @@
 
 ![CI badge](https://github.com/dbohdan/tinyfts/workflows/CI/badge.svg)
 
-A very small standalone full-text search HTTP server.
+A very small standalone full-text search HTTP/SCGI server.
 
 
 ## Dependencies
@@ -16,10 +16,7 @@ A very small standalone full-text search HTTP server.
 
 The above and
 * Tcllib
-* curl(1)
-* kill(1)
-* make(1)
-* sqlite3(1)
+* curl(1), kill(1), make(1), sqlite3(1)
 
 On recent Debian and Ubuntu install the dependencies with
 
@@ -78,7 +75,7 @@ command line option `--behind-reverse-proxy true`.  It is necessary for
 correct client IP address detection, which rate limiting depends on.  Do
 **not** enable `--behind-reverse-proxy` if tinyfts is not behind a reverse
 proxy.  It will let clients spoof their IP with the header `X-Real-IP` or
-`X-Forwarder-For` and evade rate limiting themselves and rate limit others.
+`X-Forwarded-For` and evade rate limiting themselves and rate limit others.
 
 
 ## License
