@@ -93,7 +93,7 @@ set config {
 
     title-weight 1000.0
 
-    query-dialect fts5
+    query-dialect web
 }
 
 
