@@ -33,6 +33,29 @@ sudo ln -s tclsh8.6 tclsh
 ```
 
 
+## Usage
+
+```none
+Usage:
+    ./tinyfts-dev.tcl --db-file path [option ...] [wapp-arg ...]
+Options:
+    --css-file ''
+    --header <HTML>
+    --footer <HTML>
+    --title tinyfts
+    --subtitle <HTML>
+    --table tinyfts
+    --min-length 2
+    --rate-limit 60
+    --result-limit 100
+    --log 'access bad-request error rate'
+    --behind-reverse-proxy false
+    --snippet-size 20
+    --title-weight 1000.0
+    --query-syntax web
+```
+
+
 ## Setup example
 
 The following instructions should work on most Linux distributions and FreeBSD
