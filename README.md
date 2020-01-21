@@ -56,6 +56,14 @@ Options:
 ```
 
 
+## Query syntax (default or "web")
+
+* `foo`
+* `"foo bar"`
+* `foo AND bar`, `foo OR bar`, `NOT foo`
+* `-foo`, `-"foo bar"`
+
+
 ## Setup example
 
 The following instructions should work on most Linux distributions and FreeBSD
