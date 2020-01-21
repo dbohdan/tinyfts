@@ -33,31 +33,31 @@ set td(sample) {
         url https://fts.example.com/foo
         title Foo
         modified 1
-        content {Now this is a story}
+        content {Now this is a story UNO}
     }
     {
         url https://fts.example.com/bar
         title Bar
         modified 2
-        content {all about how}
+        content {all about how UNO}
     }
     {
         url https://fts.example.com/baz
         title Baz
         modified 3
-        content {My life got flipped turned upside down}
+        content {My life got flipped turned upside down UNO}
     }
     {
         url https://fts.example.com/qux
         title Qux
         modified 4
-        content {Don't quote}
+        content {Don't quote UNO}
     }
     {
         url https://fts.example.com/quux
         title Quux
         modified 5
-        content {too much}
+        content {too much UNO}
     }
 }
 
@@ -155,7 +155,7 @@ tcltest::test search-1.2 {JSON result} -body {
 } -result {results {{url https://fts.example.com/foo\
                      title Foo\
                      modified 1\
-                     snippet {{Now this is a story} {}}}}}
+                     snippet {{Now this is a story UNO} {}}}}}
 
 tcltest::test search-1.3 {Tcl result} -cleanup {unset raw} -body {
     set raw [curl $td(query)=foo&format=tcl]
@@ -163,7 +163,7 @@ tcltest::test search-1.3 {Tcl result} -cleanup {unset raw} -body {
 } -result {url https://fts.example.com/foo\
            title Foo\
            modified 1\
-           snippet {{Now this is a story} {}}}
+           snippet {{Now this is a story UNO} {}}}
 
 tcltest::test search-1.4 {3 results} -cleanup {unset raw} -body {
     set raw [curl $td(query)=fts+NOT+Qu*&format=tcl]
@@ -175,9 +175,9 @@ tcltest::test search-1.4 {3 results} -cleanup {unset raw} -body {
 tcltest::test search-1.5 {Pagination} -cleanup {
     unset next raw1 raw2
 } -body {
-    set raw1 [curl $td(query)=fts&format=tcl]
+    set raw1 [curl $td(query)=uno&format=tcl]
     set next [dict get $raw1 next]
-    set raw2 [curl $td(query)=fts&format=tcl&start=$next]
+    set raw2 [curl $td(query)=uno&format=tcl&start=$next]
 
     lsort [lmap x [concat [dict get $raw1 results] [dict get $raw2 results]] {
         dict get $x title
