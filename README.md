@@ -9,7 +9,7 @@ A very small standalone full-text search HTTP/SCGI server.
 
 * [Dependencies](#dependencies)
 * [Usage](#usage)
-* [Query syntax (default or "web")](#query-syntax-default-or-web)
+* [Query syntax](#query-syntax)
 * [Setup example](#setup-example)
 * [Operating notes](#operating-notes)
 * [License](#license)
@@ -66,12 +66,22 @@ Options:
 ```
 
 
-## Query syntax (default or "web")
+## Query syntax
 
-* `foo`
+### Default or "web"
+
+The default query syntax can handle the following types of expressions.
+
+* `word`
 * `"foo bar"`
 * `foo AND bar`, `foo OR bar`, `NOT foo`
-* `-foo`, `-"foo bar"`
+* `-foo`, `-"foo bar"` (same as `NOT`)
+
+### FTS5
+
+You can allow your users access to the full
+[FTS5 query syntax](https://www.sqlite.org/fts5.html#full_text_query_syntax)
+with the command line option `--query-syntax fts5`.
 
 
 ## Setup example
