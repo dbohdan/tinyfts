@@ -90,6 +90,8 @@ set config {
     behind-reverse-proxy false
 
     snippet-size 20
+
+    title-weight 1000.0
 }
 
 
@@ -549,13 +551,18 @@ proc wapp-page-search {} {
                     %3$u
                 ) AS snippet,
                 rank
-            FROM "%1$s"(:query)
-            WHERE rank > CAST(:start AS REAL)
+            FROM "%1$s"
+            WHERE
+                "%1$s" MATCH :query AND
+                -- Column weight: url, title, modified, content.
+                rank MATCH 'bm25(0.0, %3$f, 0.0, 1.0)' AND
+                rank > CAST(:start AS REAL)
             ORDER BY rank ASC
             LIMIT %2$u
         } [config::get table] \
           [config::get result-limit] \
-          [config::get snippet-size]]
+          [config::get snippet-size] \
+          [config::get title-weight]]
 
         db eval $selectStatement values {
             lappend results [array get values]
