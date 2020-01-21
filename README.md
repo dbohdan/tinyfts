@@ -47,7 +47,7 @@ sudo ln -s tclsh8.6 tclsh
 
 ```none
 Usage:
-    ./tinyfts-dev.tcl --db-file path [option ...] [wapp-arg ...]
+    tinyfts --db-file path [option ...] [wapp-arg ...]
 Options:
     --css-file ''
     --header <HTML>
