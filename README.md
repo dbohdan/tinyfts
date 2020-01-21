@@ -5,6 +5,16 @@
 A very small standalone full-text search HTTP/SCGI server.
 
 
+## Contents
+
+* [Dependencies](#dependencies)
+* [Usage](#usage)
+* [Query syntax (default or "web")](#query-syntax-default-or-web)
+* [Setup example](#setup-example)
+* [Operating notes](#operating-notes)
+* [License](#license)
+
+
 ## Dependencies
 
 ### Server
