@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 # ==============================================================================
-# Copyright (c) 2019 D. Bohdan and contributors listed in AUTHORS
+# Copyright (c) 2019, 2020 D. Bohdan and contributors listed in AUTHORS
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -86,6 +86,26 @@ set td(cleanup) {
 }
 
 
+### Unit: tinyfts.
+
+source tinyfts
+
+tcltest::test translate-query-1.1 {} -body {
+    translate-query::web {hello "very strange" world -foo -"foo bar"}
+} -result {"hello" "very strange" "world" NOT "foo" NOT "foo bar"}
+
+tcltest::test translate-query-1.2 {} -body {
+    translate-query::web {foo bar OR baz}
+} -result {"foo" "bar" OR "baz"}
+
+tcltest::test translate-query-1.3 {} -body {
+    translate-query::web foo\\\"bar
+} -result \"foo\\\"bar\"
+
+
+
+### Integration: tools.
+
 tcltest::test tools-import-1.1 {} -body {
     tclsh tools/import tcl - $td(dbFile) << $td(sample)
 } -cleanup $td(cleanup) -result {}
@@ -116,6 +136,8 @@ tcltest::test tools-import-2.3 {} -cleanup $td(cleanup) -body {
     tclsh tools/import tcl - $td(dbFile) << \x00\x01\x02\x03\x04\x05\x06\x07
 } -returnCodes 1 -match glob -result *
 
+
+### Integration: tinyfts.
 
 set td(port) [expr 8000+int(rand()*1000)]
 tclsh tools/import tcl - $td(dbFile) << $td(sample)

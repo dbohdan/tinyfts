@@ -92,6 +92,8 @@ set config {
     snippet-size 20
 
     title-weight 1000.0
+
+    query-dialect fts5
 }
 
 
@@ -481,6 +483,46 @@ proc rate-limit::allow? client {
 }
 
 
+namespace eval translate-query {}
+
+
+proc translate-query::fts5 query {
+    return $query
+}
+
+
+proc translate-query::web query {
+    set not {}
+    set translated {}
+
+    # A crude query tokenizer.  Doesn't understand escaped double quotes.
+    set start 0
+    while {[regexp -indices \
+                   -start $start \
+                   {(?:^|\s)((?:[^\s]+|-?"[^"]*"))} \
+                   $query \
+                   _ tokenIdx]} {
+        set token [string range $query {*}$tokenIdx]
+        set start [lindex $tokenIdx 1]+1
+
+        regexp {^(-)?"?(.*?)"?$} $token _ not token
+        regsub -all {(\"|\\)} $token {\\\1}
+
+        if {$not ne {}} {
+            lappend translated NOT
+        }
+
+        if {$token ni {AND NOT OR}} {
+            set token \"$token\"
+        }
+
+        lappend translated $token
+    }
+
+    return [join $translated { }]
+}
+
+
 proc wapp-default {} {
     log access
 
@@ -515,6 +557,8 @@ proc wapp-page-search {} {
     set query [wapp-param query {}]
     set start [wapp-param start -1000000]
     set counter [wapp-param counter 1]
+
+    set translated [translate-query::[config::get query-dialect] $query]
 
     foreach {badParamCheck msgTemplate} {
         {$format ni {html json tcl}}
@@ -553,7 +597,7 @@ proc wapp-page-search {} {
                 rank
             FROM "%1$s"
             WHERE
-                "%1$s" MATCH :query AND
+                "%1$s" MATCH :translated AND
                 -- Column weight: url, title, modified, content.
                 rank MATCH 'bm25(0.0, %3$f, 0.0, 1.0)' AND
                 rank > CAST(:start AS REAL)
