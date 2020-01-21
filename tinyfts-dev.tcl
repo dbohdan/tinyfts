@@ -93,7 +93,7 @@ set config {
 
     title-weight 1000.0
 
-    query-dialect web
+    query-syntax web
 }
 
 
@@ -558,7 +558,7 @@ proc wapp-page-search {} {
     set start [wapp-param start -1000000]
     set counter [wapp-param counter 1]
 
-    set translated [translate-query::[config::get query-dialect] $query]
+    set translated [translate-query::[config::get query-syntax] $query]
 
     foreach {badParamCheck msgTemplate} {
         {$format ni {html json tcl}}
