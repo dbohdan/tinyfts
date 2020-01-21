@@ -68,8 +68,6 @@ set config {
 
     subtitle {
         Full-text search.
-        <a href="https://www.sqlite.org/fts5.html#full_text_query_syntax">Query
-        syntax</a>.
     }
 
     table tinyfts
