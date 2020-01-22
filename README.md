@@ -70,18 +70,26 @@ Options:
 
 ### Default or "web"
 
-The default query syntax can handle the following types of expressions.
+The default full-text search query syntax in tinyfts resembles that of a Web
+search engine.  It can handle the following types of expressions.
 
-* `word`
-* `"foo bar"`
-* `foo AND bar`, `foo OR bar`, `NOT foo`
-* `-foo`, `-"foo bar"` (same as `NOT`)
+* `foo` — search for the word "foo".
+* `"foo bar"` — search for the phrase "foo bar".
+* `foo AND bar` `foo OR bar`, `NOT foo` — search for both "foo" and "bar", at
+least one of "foo" and "bar", documents without "foo" respectively.
+"foo AND bar" is identical to "foo bar".  The operators "AND", "OR", and "NOT"
+must be in all caps.
+* `-foo`, `-"foo bar"` — the same as `NOT foo`, `NOT "foo bar"`.
 
 ### FTS5
 
-You can allow your users access to the full
-[FTS5 query syntax](https://www.sqlite.org/fts5.html#full_text_query_syntax)
-with the command line option `--query-syntax fts5`.
+You can allow your users to write full
+[FTS5 queries](https://www.sqlite.org/fts5.html#full_text_query_syntax)
+with the command line option `--query-syntax fts5`.  FTS5 queries are more
+powerful, but expose the technical details of the underlying database.  (For
+example, the column names.)  Users who are unfamiliar with the FTS5 syntax will
+find it surprising and run into errors because they did not quote a word that
+has special meaning.
 
 
 ## Setup example
