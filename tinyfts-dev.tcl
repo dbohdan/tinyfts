@@ -194,7 +194,7 @@ proc view::footer {} {
 proc view::form query {
     wapp-trim {
         <form action="/search">
-            <input type="text" name="query" value="%html($query)">
+            <input type="search" name="query" value="%html($query)">
             <input type="submit" value="Search">
         </form>
     }
