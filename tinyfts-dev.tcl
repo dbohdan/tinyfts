@@ -33,7 +33,20 @@ set state {
 
     flags {
         hide db-file
+
         html-value {header footer subtitle}
+
+        validator {
+            query-syntax {
+                set validSyntaxes [lmap x [info commands translate-query::*] {
+                    namespace tail $x
+                }]
+
+                if {$value ni $validSyntaxes} {
+                    error [list invalid query syntax: $value]
+                }
+            }
+        }
     }
 
     rate {}
@@ -686,6 +699,9 @@ proc cli::start {argv0 argv} {
             regsub ^--? $flag {} k
 
             if {[dict exists $::config $k]} {
+                set validator [state::get-default {} flags validator $k]
+                apply [list value $validator] $v
+
                 dict set ::config $k $v
             } else {
                 lappend wappArgs $flag $v
