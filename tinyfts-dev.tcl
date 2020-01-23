@@ -110,6 +110,16 @@ set config {
 
 proc accessor {name varName} {
     namespace eval $name [format {
+        proc exists args {
+            return [dict exists $%1$s {*}$args]
+        }
+
+
+        proc for {varNames body} {
+            uplevel 1 [list dict for $varNames $%1$s $body]
+        }
+
+
         proc get args {
             return [dict get $%1$s {*}$args]
         }
@@ -463,8 +473,8 @@ proc rate-limit::allow? client {
     set m [expr {[clock seconds] / 60}]
 
     if {[state::get-default -1 rate $client last] != $m} {
-        dict set ::state rate $client last $m
-        dict set ::state rate $client count 0
+        state::set rate $client last $m
+        state::set rate $client count 0
 
         return 1
     }
@@ -663,7 +673,7 @@ proc cli::usage me {
                  \[option ...\] \[wapp-arg ...\]"
     puts stderr Options:
 
-    dict for {k v} $::config {
+    config::for {k v} {
         if {$k in [state::get flags hide]} continue
 
         if {$k in [state::get flags html-value]} {
@@ -698,11 +708,11 @@ proc cli::start {argv0 argv} {
         foreach {flag v} $argv {
             regsub ^--? $flag {} k
 
-            if {[dict exists $::config $k]} {
+            if {[config::exists $k]} {
                 set validator [state::get-default {} flags validator $k]
                 apply [list value $validator] $v
 
-                dict set ::config $k $v
+                config::set $k $v
             } else {
                 lappend wappArgs $flag $v
             }
