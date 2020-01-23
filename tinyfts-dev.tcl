@@ -170,88 +170,16 @@ proc gensym {} {
 
 ### Views
 
-namespace eval view {
-    namespace import ::config
-}
-
-
-proc view::header pageTitle {
-    set documentTitle [config::get title]
-    if {$pageTitle ne {}} {
-        set documentTitle "$pageTitle | $documentTitle"
-    }
-
-    set map [list \$documentTitle [wappInt-enc-html $documentTitle]]
-    wapp-unsafe [string map $map [config::get header]]
-}
-
-
-proc view::footer {} {
-    wapp-unsafe [config::get footer]
-}
-
-
-proc view::form query {
-    wapp-trim {
-        <form action="/search">
-            <input type="search" name="query" value="%html($query)">
-            <input type="submit" value="Search">
-        </form>
+namespace eval view {}
+foreach ns {html json tcl} {
+    namespace eval view::$ns {
+        namespace path [namespace parent]
     }
 }
+unset ns
 
 
-proc view::default {} {
-    header {}
-    wapp-trim {
-        <header>
-            <h1>%html([config::get title])</h1>
-            <p>%unsafe([config::get subtitle])</p>
-        </header>
-        <main>
-    }
-    form {}
-    wapp </main>
-    footer
-}
-
-
-namespace eval view::error {
-    namespace path [namespace parent]
-}
-
-
-proc view::error::html {code message} {
-    wapp-reply-code $code
-
-    header {}
-    wapp-trim {<header><h1>Error</h1><p>%html($message)</p></header>}
-    footer
-}
-
-
-proc view::error::json {code message} {
-    wapp-mimetype application/json
-    wapp-reply-code $code
-
-    wapp-trim {{"error": "%string($message)"}}
-}
-
-
-proc view::error::tcl {code message} {
-    wapp-mimetype text/plain
-    wapp-reply-code $code
-
-    wapp-trim [list error $message]
-}
-
-
-namespace eval view::results {
-    namespace path [namespace parent]
-}
-
-
-proc view::results::extract-marked {startMarker endMarker text} {
+proc view::extract-marked {startMarker endMarker text} {
     set re (.*?)${startMarker}(.*?)${endMarker}
 
     set all {}
@@ -273,7 +201,57 @@ proc view::results::extract-marked {startMarker endMarker text} {
 }
 
 
-proc view::results::html {query startMatch endMatch results counter} {
+proc view::html::header pageTitle {
+    set documentTitle [config::get title]
+    if {$pageTitle ne {}} {
+        set documentTitle "$pageTitle | $documentTitle"
+    }
+
+    set map [list \$documentTitle [wappInt-enc-html $documentTitle]]
+    wapp-unsafe [string map $map [config::get header]]
+}
+
+
+proc view::html::footer {} {
+    wapp-unsafe [config::get footer]
+}
+
+
+proc view::html::form query {
+    wapp-trim {
+        <form action="/search">
+            <input type="search" name="query" value="%html($query)">
+            <input type="submit" value="Search">
+        </form>
+    }
+}
+
+
+proc view::html::default {} {
+    header {}
+    wapp-trim {
+        <header>
+            <h1>%html([config::get title])</h1>
+            <p>%unsafe([config::get subtitle])</p>
+        </header>
+        <main>
+    }
+    form {}
+    wapp </main>
+    footer
+}
+
+
+proc view::html::error {code message} {
+    wapp-reply-code $code
+
+    header {}
+    wapp-trim {<header><h1>Error</h1><p>%html($message)</p></header>}
+    footer
+}
+
+
+proc view::html::results {query startMatch endMatch results counter} {
     header $query
     wapp \n<main>
     form $query
@@ -325,8 +303,15 @@ proc view::results::html {query startMatch endMatch results counter} {
     footer
 }
 
+proc view::json::error {code message} {
+    wapp-mimetype application/json
+    wapp-reply-code $code
 
-proc view::results::json {query startMatch endMatch results} {
+    wapp-trim {{"error": "%string($message)"}}
+}
+
+
+proc view::json::results {query startMatch endMatch results} {
     wapp-mimetype application/json
 
     wapp \{\n
@@ -371,7 +356,7 @@ proc view::results::json {query startMatch endMatch results} {
 }
 
 
-proc view::results::string-to-json s {
+proc view::json::string-to-json s {
     return [string map {
         \x00 \\u0000
         \x01 \\u0001
@@ -412,7 +397,15 @@ proc view::results::string-to-json s {
 }
 
 
-proc view::results::tcl {query startMatch endMatch results} {
+proc view::tcl::error {code message} {
+    wapp-mimetype text/plain
+    wapp-reply-code $code
+
+    wapp-trim [list error $message]
+}
+
+
+proc view::tcl::results {query startMatch endMatch results} {
     wapp-mimetype text/plain
 
     if {[llength $results] == [config::get result-limit]} {
@@ -524,7 +517,7 @@ proc translate-query::web query {
 proc wapp-default {} {
     log access
 
-    view::default
+    view::html::default
 }
 
 
@@ -570,7 +563,7 @@ proc wapp-page-search {} {
     } {
         if $badParamCheck {
             set msg [subst $msgTemplate]
-            view::error::html 400 $msg
+            view::html::error 400 $msg
             log bad-request $msg
 
             return
@@ -612,7 +605,7 @@ proc wapp-page-search {} {
     } on error {msg _} {
         regsub ^fts5: $msg {Invalid query:} msg
 
-        view::error::$format 400 $msg
+        view::${format}::error 400 $msg
         log error $msg
 
         return
@@ -622,7 +615,7 @@ proc wapp-page-search {} {
     if {$format eq {html}} {
         lappend viewArgs $counter
     }
-    view::results::$format {*}$viewArgs
+    view::${format}::results {*}$viewArgs
 }
 
 
