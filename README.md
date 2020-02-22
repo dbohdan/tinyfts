@@ -55,7 +55,7 @@ Options:
     --title tinyfts
     --subtitle <HTML>
     --table tinyfts
-    --min-length 2
+    --min-query-length 2
     --rate-limit 60
     --result-limit 100
     --log 'access bad-request error rate'

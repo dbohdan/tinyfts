@@ -147,7 +147,7 @@ set td(pid) [tclsh tinyfts --db-file $td(dbFile) \
                            --subtitle World \
                            --rate-limit 20 \
                            --result-limit 3 \
-                           --min-length 3 \
+                           --min-query-length 3 \
                            --log {} \
                            & \
 ]
