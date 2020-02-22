@@ -85,8 +85,6 @@ set config {
 
     table tinyfts
 
-    min-query-length 2
-
     rate-limit 60
 
     result-limit 100
@@ -103,6 +101,8 @@ set config {
     snippet-size 20
 
     title-weight 1000.0
+
+    query-min-length 2
 
     query-syntax web
 }
@@ -578,8 +578,8 @@ proc wapp-page-search {} {
         {$format ni {html json tcl}}
         {Unknown format.}
 
-        {[string length [string trim $query]] < [config::get min-query-length]}
-        {Query must be at least [config::get min-query-length] characters long.}
+        {[string length [string trim $query]] < [config::get query-min-length]}
+        {Query must be at least [config::get query-min-length] characters long.}
 
         {![string is integer -strict $counter] || $counter <= 0}
         {"counter" must be a positive integer.}

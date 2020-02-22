@@ -55,13 +55,13 @@ Options:
     --title tinyfts
     --subtitle <HTML>
     --table tinyfts
-    --min-query-length 2
     --rate-limit 60
     --result-limit 100
     --log 'access bad-request error rate'
     --behind-reverse-proxy false
     --snippet-size 20
     --title-weight 1000.0
+    --query-min-length 2
     --query-syntax web
 ```
 
