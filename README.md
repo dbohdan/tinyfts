@@ -78,7 +78,7 @@ search engine.  It can handle the following types of expressions.
 
 * `foo` — search for the word *foo*.
 * `"foo bar"` — search for the phrase *foo bar*.
-* `foo AND bar` `foo OR bar`, `NOT foo` — search for both *foo* and *bar*, at
+* `foo AND bar`, `foo OR bar`, `NOT foo` — search for both *foo* and *bar*, at
 least one of *foo* and *bar*, documents without *foo* respectively.
 *foo AND bar* is identical to *foo bar*.  The operators *AND*, *OR*, and *NOT*
 must be in all caps.
@@ -89,24 +89,26 @@ must be in all caps.
 You can allow your users to write full
 [FTS5 queries](https://www.sqlite.org/fts5.html#full_text_query_syntax)
 with the command line option `--query-syntax fts5`.  FTS5 queries are more
-powerful, but expose the technical details of the underlying database.  (For
-example, the column names.)  Users who are unfamiliar with the FTS5 syntax will
-find it surprising and run into errors because they did not quote a word that
-has special meaning.
+powerful but expose the technical details of the underlying database.  (For
+example, the column names.)  Users who are unfamiliar with the FTS5 syntax
+will find it surprising and run into errors because they did not quote a word
+that has a special meaning.
 
 
 ## Setup example
 
-The following instructions should work on most Linux distributions and FreeBSD
-with the dependencies and Git installed.
+This example shows how to set up search for a backup copy of the
+[Tcler's Wiki](https://wiki.tcl-lang.org/page/About+the+WIki).  The
+instructions should work on most Linux distributions and FreeBSD with the
+dependencies and Git installed.
 
 1\. Go to <https://sourceforge.net/project/showfiles.php?group_id=211498>.
 Download and extract the last [Wikit](https://wiki.tcl-lang.org/page/Wikit)
 database snapshot of the Tcler's Wiki.  Currently that is `wikit-20141112.zip`.
-Let's say you have extracted the database file as `~/Downloads/wikit.tkd`.
+Let's assume you have extracted the database file to `~/Downloads/wikit.tkd`.
 
-2\. Download, build, and test tinyfts.  In this example we will use Git to get
-the latest development version.
+2\. Download, build, and test tinyfts.  In this example we use Git to get the
+latest development version.
 
 ```sh
 git clone https://github.com/dbohdan/tinyfts
@@ -114,8 +116,9 @@ cd tinyfts
 make
 ```
 
-3\. Create a tinyfts search database from the Tcler's Wiki database.  Depending
-on the hardware, this may take up to several minutes with an input database
+3\. Create a tinyfts search database from the Tcler's Wiki database.  The
+repository includes an import tool that supports Wikit databases.  Depending
+on your hardware, this may take up to several minutes with an input database
 size in the hundreds of megabytes.
 
 ```sh
@@ -123,7 +126,7 @@ size in the hundreds of megabytes.
 ```
 
 4\. Start tinyfts on <http://localhost:8080>.  The server URL should open
-automatically in your browser.  Check that the search works.
+automatically in your browser.  Try searching.
 
 ```sh
 ./tinyfts --db-file /tmp/fts.sqlite3 --title 'tinyfts demo' --local 8080
