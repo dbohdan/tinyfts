@@ -4,6 +4,9 @@
 
 A very small standalone full-text search HTTP/SCGI server.
 
+![A screenshot of what the unofficial tinyfts search service for the
+Tcler's Wiki looked like](screenshot.png)
+
 
 ## Contents
 
