@@ -56,7 +56,7 @@ proc import::create-db {dest config} {
 }
 
 
-proc import::data-file {srcPath destPath config} {
+proc import::serialized {srcPath destPath config} {
     set contents [expr {
         $srcPath eq {-}
         ? [read stdin]
@@ -152,7 +152,7 @@ proc import::parse-options {command options} {
 
 
 proc import::json {src dest args} {
-    data-file $src $dest [parse-options json $args]
+    serialized $src $dest [parse-options json $args]
 }
 
 
@@ -162,7 +162,7 @@ proc import::nikit {src dest args} {
 
 
 proc import::tcl {src dest args} {
-    data-file $src $dest [parse-options tcl $args]
+    serialized $src $dest [parse-options tcl $args]
 }
 
 
