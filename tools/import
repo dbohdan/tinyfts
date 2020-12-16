@@ -25,6 +25,7 @@
 package require Tcl 8.6
 package require fileutil 1
 package require http 2
+package require json 1
 package require sqlite3 3.9
 
 
@@ -50,17 +51,23 @@ proc import::create-db {dest config} {
 
     dest function url [list apply {{prefix name} {
         set encoded [string range [http::formatQuery {} $name] 1 end]
-        return -level 0 $prefix$encoded 
+        return -level 0 $prefix$encoded
     }} [dict get $config url-prefix]]
 }
 
 
-proc import::tcl-file {srcPath destPath config} {
-    set dictList [expr {
+proc import::data-file {srcPath destPath config} {
+    set contents [expr {
         $srcPath eq {-}
         ? [read stdin]
         : [fileutil::cat $srcPath]
     }]
+    set dictList [expr {
+        [dict get $config command] eq {json}
+        ? [json::json2dict $contents]
+        : $contents
+    }]
+
     sqlite3 dest $destPath
 
     create-db dest $config
@@ -144,13 +151,18 @@ proc import::parse-options {command options} {
 }
 
 
+proc import::json {src dest args} {
+    data-file $src $dest [parse-options json $args]
+}
+
+
 proc import::nikit {src dest args} {
     wiki $src $dest [parse-options nikit $args]
 }
 
 
 proc import::tcl {src dest args} {
-    tcl-file $src $dest [parse-options tcl $args]
+    data-file $src $dest [parse-options tcl $args]
 }
 
 
@@ -160,7 +172,7 @@ proc import::wikit {src dest args} {
 
 
 namespace eval import {
-    namespace export nikit tcl wikit
+    namespace export json nikit tcl wikit
     namespace ensemble create
 }
 

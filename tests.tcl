@@ -28,38 +28,40 @@ package require textutil
 
 cd [file dirname [info script]]
 
-set td(sample) {
+set td(json-sample) {[
     {
-        url https://fts.example.com/foo
-        title Foo
-        modified 1
-        content {Now this is a story UNO}
-    }
+        "url": "https://fts.example.com/foo",
+        "title": "Foo",
+        "modified": 1,
+        "content": "Now this is a story UNO"
+    },
     {
-        url https://fts.example.com/bar
-        title Bar
-        modified 2
-        content {all about how UNO}
-    }
+        "url": "https://fts.example.com/bar",
+        "title": "Bar",
+        "modified": 2,
+        "content": "all about how UNO"
+    },
     {
-        url https://fts.example.com/baz
-        title Baz
-        modified 3
-        content {My life got flipped turned upside down UNO}
-    }
+        "url": "https://fts.example.com/baz",
+        "title": "Baz",
+        "modified": 3,
+        "content": "My life got flipped turned upside down UNO"
+    },
     {
-        url https://fts.example.com/qux
-        title Qux
-        modified 4
-        content {Don't quote UNO}
-    }
+        "url": "https://fts.example.com/qux",
+        "title": "Qux",
+        "modified": 4,
+        "content": "Don't quote UNO"
+    },
     {
-        url https://fts.example.com/quux
-        title Quux
-        modified 5
-        content {too much UNO}
+        "url": "https://fts.example.com/quux",
+        "title": "Quux",
+        "modified": 5,
+        "content": "too much UNO"
     }
-}
+]}
+
+set td(tcl-sample) [json::json2dict $td(json-sample)]
 
 
 proc curl args {
@@ -106,23 +108,43 @@ tcltest::test translate-query-1.3 {} -body {
 
 ### Integration: tools.
 
-tcltest::test tools-import-1.1 {} -body {
-    tclsh tools/import tcl - $td(dbFile) << $td(sample)
+tcltest::test tools-import-1.1.1 {Tcl import} -body {
+    tclsh tools/import tcl - $td(dbFile) << $td(tcl-sample)
 } -cleanup $td(cleanup) -result {}
 
-tcltest::test tools-import-1.2 {} -cleanup $td(cleanup) -body {
+tcltest::test tools-import-1.1.2 {Tcl import} -cleanup $td(cleanup) -body {
     tclsh tools/import tcl - $td(dbFile) --table blah \
-          << $td(sample)
+          << $td(tcl-sample)
 
     exec sqlite3 $td(dbFile) .schema
 } -match glob -result {*CREATE VIRTUAL TABLE "blah"*USING fts5*}
 
-tcltest::test tools-import-1.3 {} -cleanup $td(cleanup) -body {
+tcltest::test tools-import-1.1.3 {Tcl import} -cleanup $td(cleanup) -body {
     tclsh tools/import tcl - $td(dbFile) --url-prefix http://example.com/ \
-          << $td(sample)
+          << $td(tcl-sample)
 
     exec sqlite3 $td(dbFile) {SELECT url FROM tinyfts LIMIT 2}
 } -match glob -result https://fts.example.com/foo\nhttps://fts.example.com/bar
+
+
+tcltest::test tools-import-1.2.1 {JSON import} -body {
+    tclsh tools/import json - $td(dbFile) << $td(json-sample)
+} -cleanup $td(cleanup) -result {}
+
+tcltest::test tools-import-1.2.2 {JSON import} -cleanup $td(cleanup) -body {
+    tclsh tools/import json - $td(dbFile) --table blah \
+          << $td(json-sample)
+
+    exec sqlite3 $td(dbFile) .schema
+} -match glob -result {*CREATE VIRTUAL TABLE "blah"*USING fts5*}
+
+tcltest::test tools-import-1.2.3 {JSON import} -cleanup $td(cleanup) -body {
+    tclsh tools/import json - $td(dbFile) --url-prefix http://example.com/ \
+          << $td(json-sample)
+
+    exec sqlite3 $td(dbFile) {SELECT url FROM tinyfts LIMIT 2}
+} -match glob -result https://fts.example.com/foo\nhttps://fts.example.com/bar
+
 
 tcltest::test tools-import-2.1 {} -cleanup $td(cleanup) -body {
     tclsh tools/import tcl /tmp/this/file/does/not/exit $td(dbFile)
@@ -140,7 +162,7 @@ tcltest::test tools-import-2.3 {} -cleanup $td(cleanup) -body {
 ### Integration: tinyfts.
 
 set td(port) [expr 8000+int(rand()*1000)]
-tclsh tools/import tcl - $td(dbFile) << $td(sample)
+tclsh tools/import tcl - $td(dbFile) << $td(tcl-sample)
 set td(pid) [tclsh tinyfts --db-file $td(dbFile) \
                            --server $td(port) \
                            --title Hello \
