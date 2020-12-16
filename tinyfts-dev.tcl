@@ -734,7 +734,7 @@ proc cli::start {argv0 argv} {
             # Only read the default CSS file if no CSS is not already loaded
             # (like it is in a bundle).
             if {[state::get-default {} css] eq {}} {
-                state::set css [read-file vendor/tacit/tacit-css.min.css]
+                state::set css [read-file vendor/tacit/tacit.css]
             }
         } else {
             state::set css [read-file [config::get css-file]]
