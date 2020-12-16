@@ -585,6 +585,7 @@ figure img {
   }
 }
 
+header > h1 { text-align: center; }
 main { padding: 0 10px; }
 li > dl { display: inline-table; }
 a.next-page { font-weight: bold; }
