@@ -587,7 +587,7 @@ figure img {
 
 header > h1 { text-align: center; }
 main { padding: 0 10px; }
-li > dl { display: inline-table; }
+li > dl { vertical-align: top; }
 a.next-page { font-weight: bold; }
 footer { padding-bottom: 0; }
 footer > p { text-align: center; }
