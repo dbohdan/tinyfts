@@ -322,7 +322,7 @@ proc view::html::results {query startMatch endMatch results counter} {
     if {[llength $results] == [config::get result-limit]} {
         set next [dict get [lindex $results end] rank]
         set nextCounter [expr {$counter + [llength $results]}]
-        wapp-subst {<a class="next-page" href="/search?query=%html($query)}
+        wapp-subst {<p><a class="next-page" href="/search?query=%html($query)}
         wapp-subst {&amp;start=%html($next)}
         wapp-subst {&amp;counter=%html($nextCounter)">Next page</a></p>\n}
     }
