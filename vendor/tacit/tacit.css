@@ -35,19 +35,6 @@ body {
   line-height: 29.7px;
 }
 
-input,
-textarea,
-select,
-button, option, html,
-body {
-  font-family: system-ui, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 18px;
-  font-stretch: normal;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 29.7px;
-}
-
 th {
   font-weight: 600;
 }
@@ -115,19 +102,6 @@ table tr th {
   table {
     display: inline-block;
   }
-}
-
-input,
-textarea,
-select,
-button, option, html,
-body {
-  font-family: system-ui, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 18px;
-  font-stretch: normal;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 29.7px;
 }
 
 fieldset {
@@ -280,19 +254,6 @@ select[multiple] {
   min-width: 270px;
 }
 
-input,
-textarea,
-select,
-button, option, html,
-body {
-  font-family: system-ui, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 18px;
-  font-stretch: normal;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 29.7px;
-}
-
 pre,
 code,
 kbd,
@@ -335,19 +296,6 @@ kbd {
 mark {
   background: #ffc;
   padding: 0 3.6px;
-}
-
-input,
-textarea,
-select,
-button, option, html,
-body {
-  font-family: system-ui, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 18px;
-  font-stretch: normal;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 29.7px;
 }
 
 h1,
@@ -399,19 +347,6 @@ h6 {
   font-weight: bold;
   line-height: 18px;
   text-transform: uppercase;
-}
-
-input,
-textarea,
-select,
-button, option, html,
-body {
-  font-family: system-ui, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 18px;
-  font-stretch: normal;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 29.7px;
 }
 
 a {
