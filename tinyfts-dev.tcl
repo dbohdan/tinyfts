@@ -58,30 +58,24 @@ set config {
 
     css-file {}
 
-    header {
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-            <title>$documentTitle</title>
-            <link rel="stylesheet" type="text/css" href="/css">
-        </head>
-        <body>
-    }
+    header {<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>$documentTitle</title>
+    <link rel="stylesheet" type="text/css" href="/css">
+</head>
+<body>
+}
 
-    footer {
-        </body>
-        </html>
-    }
+    footer {</body>
+</html>
+}
 
-    title {
-        tinyfts
-    }
+    title tinyfts
 
-    subtitle {
-        Full-text search.
-    }
+    subtitle {Full-text search.}
 
     table tinyfts
 
@@ -257,10 +251,10 @@ proc view::html::default {} {
             <h1>%html([config::get title])</h1>
             <p>%unsafe([config::get subtitle])</p>
         </header>
-        <main>
     }
+    wapp \n<main>\n
     form {}
-    wapp </main>
+    wapp \n</main>\n
     footer
 }
 
@@ -269,14 +263,14 @@ proc view::html::error {code message} {
     wapp-reply-code $code
 
     header {}
-    wapp-trim {<header><h1>Error</h1><p>%html($message)</p></header>}
+    wapp-subst {<header><h1>Error</h1><p>%html($message)</p></header>\n}
     footer
 }
 
 
 proc view::html::results {query startMatch endMatch results counter} {
     header $query
-    wapp \n<main>
+    wapp <main>\n
     form $query
     wapp-subst {\n<ol start="%html($counter)">\n}
 
@@ -289,37 +283,37 @@ proc view::html::results {query startMatch endMatch results counter} {
                 <dl>
                     <dt>
                         <a href="%html([dict get $result url])">
-                            %html([dict get $result title])</a>
+                            %html([dict get $result title])
+                        </a>
                         (modified %html($date))
                     </dt>
-                </dl>
-                <dd>
+                    <dd>
         }
+        wapp \n
 
         set marked [extract-marked $startMatch \
                                    $endMatch \
                                    [dict get $result snippet]]
         foreach {before marked} $marked {
-            wapp-trim {
-                %html($before)<strong>%html($marked)</strong>
-            }
+            wapp-subst {%html($before)<strong>%html($marked)</strong>}
         }
 
-        wapp-trim </dd>\n</li>
+        wapp \n</dd>\n</dl>\n</li>\n
     }
 
-    wapp-trim </ol>
+    wapp </ol>\n
     if {[llength $results] == 0} {
-        wapp-trim {No results.}
+        wapp "No results.\n"
     }
-    wapp-trim </main>
+    wapp </main>\n
 
     if {[llength $results] == [config::get result-limit]} {
         set next [dict get [lindex $results end] rank]
         set nextCounter [expr {$counter + [llength $results]}]
-        wapp \n<footer>\n
-        wapp-subst {<a href="/search?query=%html($query)&start=%html($next)}
-        wapp-subst {&counter=%html($nextCounter)">Next page</a>}
+        wapp <footer>\n
+        wapp-subst {<a href="/search?query=%html($query)}
+        wapp-subst {&amp;start=%html($next)}
+        wapp-subst {&amp;counter=%html($nextCounter)">Next page</a>}
         wapp \n</footer>\n
     }
 
@@ -330,7 +324,7 @@ proc view::json::error {code message} {
     wapp-mimetype application/json
     wapp-reply-code $code
 
-    wapp-trim {{"error": "%string($message)"}}
+    wapp-subst {{"error": "%string($message)"}}
 }
 
 
