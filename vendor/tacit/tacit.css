@@ -589,3 +589,4 @@ main { padding: 0 10px; }
 li > dl { display: inline-table; }
 a.next-page { font-weight: bold; }
 footer { padding-bottom: 0; }
+footer > p { text-align: center; }
