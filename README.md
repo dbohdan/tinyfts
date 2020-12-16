@@ -13,7 +13,7 @@ Tcler's Wiki looked like](screenshot.png)
 * [Dependencies](#dependencies)
 * [Usage](#usage)
 * [Query syntax](#query-syntax)
-* [Setup example](#setup-example)
+* [Setup](#setup)
 * [Operating notes](#operating-notes)
 * [License](#license)
 
@@ -95,7 +95,15 @@ will find it surprising and run into errors because they did not quote a word
 that has a special meaning.
 
 
-## Setup example
+## Setup
+
+Tinyfts searches the contents of an SQLite database table with a particular
+schema.  The bundled import tool `tools/import` can import serialized data
+(JSON and Tcl) and wiki pages from a
+[Wikit](https://wiki.tcl-lang.org/page/Wikit)/Nikit database into a tinyfts
+database.
+
+### Example
 
 This example shows how to set up search for a backup copy of the
 [Tcler's Wiki](https://wiki.tcl-lang.org/page/About+the+WIki).  The
@@ -103,9 +111,9 @@ instructions should work on most Linux distributions and FreeBSD with the
 dependencies and Git installed.
 
 1\. Go to <https://sourceforge.net/project/showfiles.php?group_id=211498>.
-Download and extract the last [Wikit](https://wiki.tcl-lang.org/page/Wikit)
-database snapshot of the Tcler's Wiki.  Currently that is `wikit-20141112.zip`.
-Let's assume you have extracted the database file to `~/Downloads/wikit.tkd`.
+Download and extract the last Wikit  database snapshot of the Tcler's Wiki.
+Currently that is `wikit-20141112.zip`.  Let's assume you have extracted the
+database file to `~/Downloads/wikit.tkd`.
 
 2\. Download, build, and test tinyfts.  In this example we use Git to get the
 latest development version.
