@@ -34,7 +34,7 @@ set state {
     flags {
         hide db-file
 
-        html-value {header footer subtitle}
+        html-value {credits header footer subtitle}
 
         validator {
             query-syntax {
@@ -57,6 +57,9 @@ set config {
     db-file {}
 
     css-file {}
+
+    credits {Powered by <a\
+        href="https://github.com/dbohdan/tinyfts">tinyfts</a>}
 
     header {<!DOCTYPE html>
 <html>
@@ -234,6 +237,14 @@ proc view::html::footer {} {
 }
 
 
+proc view::html::credits {} {
+    set credits [config::get credits]
+    if {$credits ne {}} {
+        wapp-unsafe <footer><p>$credits</p></footer>
+    }
+}
+
+
 proc view::html::form query {
     wapp-trim {
         <form action="/search">
@@ -255,6 +266,7 @@ proc view::html::default {} {
     wapp \n<main>\n
     form {}
     wapp \n</main>\n
+    credits
     footer
 }
 
@@ -264,6 +276,7 @@ proc view::html::error {code message} {
 
     header {}
     wapp-subst {<header><h1>Error</h1><p>%html($message)</p></header>\n}
+    credits
     footer
 }
 
@@ -305,18 +318,17 @@ proc view::html::results {query startMatch endMatch results counter} {
     if {[llength $results] == 0} {
         wapp "No results.\n"
     }
-    wapp </main>\n
 
     if {[llength $results] == [config::get result-limit]} {
         set next [dict get [lindex $results end] rank]
         set nextCounter [expr {$counter + [llength $results]}]
-        wapp <footer>\n
-        wapp-subst {<a href="/search?query=%html($query)}
+        wapp-subst {<a class="next-page" href="/search?query=%html($query)}
         wapp-subst {&amp;start=%html($next)}
-        wapp-subst {&amp;counter=%html($nextCounter)">Next page</a>}
-        wapp \n</footer>\n
+        wapp-subst {&amp;counter=%html($nextCounter)">Next page</a></p>\n}
     }
 
+    wapp </main>\n
+    credits
     footer
 }
 

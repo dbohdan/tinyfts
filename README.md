@@ -53,6 +53,7 @@ Usage:
     tinyfts --db-file path [option ...] [wapp-arg ...]
 Options:
     --css-file ''
+    --credits <HTML>
     --header <HTML>
     --footer <HTML>
     --title tinyfts
