@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Install dependencies
-      run: sudo apt install curl libsqlite3-tcl sqlite3 tcl tcllib
+      run: sudo apt install libsqlite3-tcl sqlite3 tcl tcllib
     - name: Checkout
       uses: actions/checkout@v1
     - name: Build

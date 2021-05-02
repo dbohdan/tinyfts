@@ -22,6 +22,7 @@
 # ==============================================================================
 
 package require fileutil 1
+package require http 2
 package require json 1
 package require tcltest 2
 package require textutil
@@ -64,8 +65,13 @@ set td(json-sample) {[
 set td(tcl-sample) [json::json2dict $td(json-sample)]
 
 
-proc curl args {
-    exec curl --silent {*}$args 2>@1
+proc fetch args {
+    try {
+        set token [http::geturl {*}$args]
+        http::data $token
+    } finally {
+        catch { http::cleanup $token }
+    }
 }
 
 
@@ -175,7 +181,7 @@ set td(pid) [tclsh tinyfts --db-file $td(dbFile) \
 ]
 for {set i 0} {$i < 10} {incr i} {
     try {
-        curl http://127.0.0.1:$td(port)
+        fetch http://127.0.0.1:$td(port)
     } on ok _ break on error _ {}
     after [expr {$i * 10}]
 }
@@ -183,7 +189,7 @@ unset i
 
 
 tcltest::test default-1.1 {} -body {
-    curl http://127.0.0.1:$td(port)/
+    fetch http://127.0.0.1:$td(port)/
 } -match glob -result {*<form action="/search">*}
 
 
@@ -191,18 +197,18 @@ set td(query) http://127.0.0.1:$td(port)/search/?query
 
 
 tcltest::test search-1.1 {HTML result} -body {
-    curl $td(query)=foo
+    fetch $td(query)=foo
 } -match glob -result {*Foo*modified 1970-01-01*Now this is a story*}
 
 tcltest::test search-1.2 {JSON result} -body {
-    json::json2dict [curl $td(query)=foo&format=json]
+    json::json2dict [fetch $td(query)=foo&format=json]
 } -result {results {{url https://fts.example.com/foo\
                      title Foo\
                      modified 1\
                      snippet {{Now this is a story UNO} {}}}}}
 
 tcltest::test search-1.3 {Tcl result} -cleanup {unset raw} -body {
-    set raw [curl $td(query)=foo&format=tcl]
+    set raw [fetch $td(query)=foo&format=tcl]
     dict create {*}[lindex [dict get $raw results] 0]
 } -result {url https://fts.example.com/foo\
            title Foo\
@@ -210,7 +216,7 @@ tcltest::test search-1.3 {Tcl result} -cleanup {unset raw} -body {
            snippet {{Now this is a story UNO} {}}}
 
 tcltest::test search-1.4 {3 results} -cleanup {unset raw} -body {
-    set raw [curl $td(query)=fts+NOT+Qu*&format=tcl]
+    set raw [fetch $td(query)=fts+NOT+Qu*&format=tcl]
     lsort [lmap x [dict get $raw results] {
         dict get $x title
     }]
@@ -219,9 +225,9 @@ tcltest::test search-1.4 {3 results} -cleanup {unset raw} -body {
 tcltest::test search-1.5 {Pagination} -cleanup {
     unset next raw1 raw2
 } -body {
-    set raw1 [curl $td(query)=uno&format=tcl]
+    set raw1 [fetch $td(query)=uno&format=tcl]
     set next [dict get $raw1 next]
-    set raw2 [curl $td(query)=uno&format=tcl&start=$next]
+    set raw2 [fetch $td(query)=uno&format=tcl&start=$next]
 
     lsort [lmap x [concat [dict get $raw1 results] [dict get $raw2 results]] {
         dict get $x title
@@ -229,25 +235,25 @@ tcltest::test search-1.5 {Pagination} -cleanup {
 } -result {Bar Baz Foo Quux Qux}
 
 tcltest::test search-1.6 {Document title} -body {
-    curl $td(query)=foo&format=html
+    fetch $td(query)=foo&format=html
 } -match glob -result {*<title>foo | Hello</title>*}
 
 
 tcltest::test search-2.1 {No results} -body {
-    curl $td(query)=111
+    fetch $td(query)=111
 } -match glob -result {*No results.*}
 
 tcltest::test search-2.2 {Unknown format} -body {
-    curl $td(query)=foo&format=bar
+    fetch $td(query)=foo&format=bar
 } -match glob -result {*Unknown format.*}
 
 tcltest::test search-2.3 {Short query} -body {
-    curl $td(query)=xy
+    fetch $td(query)=xy
 } -match glob -result {*Query must be at least 3 characters long.*}
 
 tcltest::test search-2.4 {Hit rate limit} -cleanup {unset i result} -body {
     for {set i 0} {$i < 20} {incr i} {
-        set result [curl $td(query)=nope]
+        set result [fetch $td(query)=nope]
     }
     set result
 } -result {Access denied.}
