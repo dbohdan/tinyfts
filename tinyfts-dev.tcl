@@ -50,7 +50,7 @@ set state {
     }
 
     rate {}
-    version 0.5.0
+    version 0.5.1
 }
 
 set config {
