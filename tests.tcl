@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 # ==============================================================================
-# Copyright (c) 2019, 2020 D. Bohdan and contributors listed in AUTHORS
+# Copyright (c) 2019-2021 D. Bohdan and contributors listed in AUTHORS
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
