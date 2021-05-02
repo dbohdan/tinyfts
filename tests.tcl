@@ -58,7 +58,7 @@ set td(json-sample) {[
         "url": "https://fts.example.com/quux",
         "title": "Quux",
         "modified": 5,
-        "content": "too much UNO"
+        "content": "too much ウノ УНО UNO"
     }
 ]}
 
@@ -175,7 +175,7 @@ set td(pid) [tclsh tinyfts --db-file $td(dbFile) \
                            --subtitle World \
                            --rate-limit 20 \
                            --result-limit 3 \
-                           --query-min-length 3 \
+                           --query-min-length 2 \
                            --log {} \
                            & \
 ]
@@ -239,6 +239,45 @@ tcltest::test search-1.6 {Document title} -body {
 } -match glob -result {*<title>foo | Hello</title>*}
 
 
+tcltest::test search-1.7.1 {Unicode HTML} -body {
+    fetch $td(query)=quux&format=html
+} -match glob -result {*ウノ УНО UNO*}
+
+tcltest::test search-1.7.2 {Unicode JSON} -body {
+    encoding convertfrom utf-8 [fetch $td(query)=quux&format=json]
+} -match glob -result {*ウノ УНО UNO*}
+
+tcltest::test search-1.8.1 {Unicode HTML: "ウノ"} -body {
+    fetch $td(query)=%E3%82%A6%E3%83%8E&format=html
+} -match glob -result {*<strong>ウノ</strong>*}
+
+tcltest::test search-1.8.2 {Unicode JSON: "ウノ"} -body {
+    encoding convertfrom utf-8 [fetch \
+        $td(query)=%E3%82%A6%E3%83%8E&format=json \
+    ]
+} -match glob -result {*,"ウノ",*}
+
+tcltest::test search-1.9.1 {Unicode HTML: "УНО"} -body {
+    fetch $td(query)=%D0%A3%D0%9D%D0%9E&format=html
+} -match glob -result {*<strong>УНО</strong>*}
+
+tcltest::test search-1.9.2 {Unicode JSON: "УНО"} -body {
+    encoding convertfrom utf-8 [fetch \
+         $td(query)=%D0%A3%D0%9D%D0%9E&format=json \
+    ]
+} -match glob -result {*,"УНО",*}
+
+tcltest::test search-1.10.1 {Unicode HTML: "уно"} -body {
+    fetch $td(query)=%D1%83%D0%BD%D0%BE&format=html
+} -match glob -result {*<strong>УНО</strong>*}
+
+tcltest::test search-1.10.2 {Unicode JSON: "уно"} -body {
+    encoding convertfrom utf-8 [fetch \
+         $td(query)=%D1%83%D0%BD%D0%BE&format=json \
+    ]
+} -match glob -result {*,"УНО",*}
+
+
 tcltest::test search-2.1 {No results} -body {
     fetch $td(query)=111
 } -match glob -result {*No results.*}
@@ -248,8 +287,8 @@ tcltest::test search-2.2 {Unknown format} -body {
 } -match glob -result {*Unknown format.*}
 
 tcltest::test search-2.3 {Short query} -body {
-    fetch $td(query)=xy
-} -match glob -result {*Query must be at least 3 characters long.*}
+    fetch $td(query)=x
+} -match glob -result {*Query must be at least 2 characters long.*}
 
 tcltest::test search-2.4 {Hit rate limit} -cleanup {unset i result} -body {
     for {set i 0} {$i < 20} {incr i} {
