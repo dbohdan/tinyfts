@@ -1,7 +1,7 @@
 #! /usr/bin/env tclsh
 # A tool to import data into a tinyfts database.
 # ==============================================================================
-# Copyright (c) 2019 D. Bohdan and contributors listed in AUTHORS
+# Copyright (c) 2019, 2021 D. Bohdan and contributors listed in AUTHORS
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,7 @@
 # THE SOFTWARE.
 # ==============================================================================
 
-package require Tcl 8.6
+package require Tcl 8.6-10
 package require fileutil 1
 package require http 2
 package require json 1

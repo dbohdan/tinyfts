@@ -22,7 +22,7 @@
 # THE SOFTWARE.
 # ==============================================================================
 
-package require Tcl 8.6
+package require Tcl 8.6-10
 package require sqlite3 3.9
 
 

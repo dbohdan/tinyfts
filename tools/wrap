@@ -1,7 +1,7 @@
 #! /usr/bin/env tclsh
 # Store any data in Tcl source code.
 # ==============================================================================
-# Copyright (c) 2019 D. Bohdan and contributors listed in AUTHORS
+# Copyright (c) 2019, 2021 D. Bohdan and contributors listed in AUTHORS
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,7 @@
 # THE SOFTWARE.
 # ==============================================================================
 
-package require Tcl 8.6
+package require Tcl 8.6-10
 package require fileutil 1
 
 namespace eval wrap {}
@@ -41,7 +41,7 @@ proc wrap::escape-char c {
         return \\u[format %04x $code]
     }
 
-    return $c  
+    return $c
 }
 
 
