@@ -1,5 +1,5 @@
 # Copyright (c) 2017 D. Richard Hipp
-#
+# 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the Simplified BSD License (also
 # known as the "2-Clause License" or "FreeBSD License".)
@@ -137,19 +137,19 @@ proc wappInt-enc-unsafe {txt} {
   return $txt
 }
 proc wappInt-enc-url {s} {
-  if {[regsub -all {[^-{}@~?=#_.:/a-zA-Z0-9]} $s {[wappInt-%HHchar {&}]} s]} {
+  if {[regsub -all {[^-{}\\@~?=#_.:/a-zA-Z0-9]} $s {[wappInt-%HHchar {&}]} s]} {
     set s [subst -novar -noback $s]
   }
-  if {[regsub -all {[{}]} $s {[wappInt-%HHchar \\&]} s]} {
+  if {[regsub -all {[\\{}]} $s {[wappInt-%HHchar \\&]} s]} {
     set s [subst -novar -noback $s]
   }
   return $s
 }
 proc wappInt-enc-qp {s} {
-  if {[regsub -all {[^-{}_.a-zA-Z0-9]} $s {[wappInt-%HHchar {&}]} s]} {
+  if {[regsub -all {[^-{}\\_.a-zA-Z0-9]} $s {[wappInt-%HHchar {&}]} s]} {
     set s [subst -novar -noback $s]
   }
-  if {[regsub -all {[{}]} $s {[wappInt-%HHchar \\&]} s]} {
+  if {[regsub -all {[\\{}]} $s {[wappInt-%HHchar \\&]} s]} {
     set s [subst -novar -noback $s]
   }
   return $s
@@ -246,7 +246,8 @@ proc wapp-cache-control {x} {
 # Redirect to a different web page
 #
 proc wapp-redirect {uri} {
-  wapp-reply-code {307 Redirect}
+  wapp-reset
+  wapp-reply-code {303 Redirect}
   wapp-reply-extra Location $uri
 }
 
@@ -413,7 +414,7 @@ proc wappInt-start-browser {url} {
     exec cmd /c start $url &
   } elseif {$tcl_platform(os)=="Darwin"} {
     exec open $url &
-  } elseif {[catch {exec xdg-open $url}]} {
+  } elseif {[catch {exec -ignorestderr xdg-open $url}]} {
     exec firefox $url &
   }
 }
@@ -529,12 +530,12 @@ proc wappInt-parse-header {chan} {
     error "unsupported request method: \"[dict get $W REQUEST_METHOD]\""
   }
   set uri [lindex $req 1]
+  dict set W REQUEST_URI $uri
   set split_uri [split $uri ?]
   set uri0 [lindex $split_uri 0]
   if {![regexp {^/[-.a-z0-9_/]*$} $uri0]} {
     error "invalid request uri: \"$uri0\""
   }
-  dict set W REQUEST_URI $uri0
   dict set W PATH_INFO $uri0
   set uri1 [lindex $split_uri 1]
   dict set W QUERY_STRING $uri1
@@ -598,12 +599,14 @@ proc wappInt-decode-query-params {} {
         if {[regexp {^Content-Disposition: form-data; (.*?)\r\n\r\n(.*)$} \
              $unit unit hdr content]} {
           if {[regexp {name="(.*)"; filename="(.*)"\r\nContent-Type: (.*?)$}\
-                $hdr hr name filename mimetype]} {
+                $hdr hr name filename mimetype]
+              && [regexp {^[a-z][a-z0-9]*$} $name]} {
             dict set wapp $name.filename \
               [string map [list \\\" \" \\\\ \\] $filename]
             dict set wapp $name.mimetype $mimetype
             dict set wapp $name.content $content
-          } elseif {[regexp {name="(.*)"} $hdr hr name]} {
+          } elseif {[regexp {name="(.*)"} $hdr hr name]
+                    && [regexp {^[a-z][a-z0-9]*$} $name]} {
             dict set wapp $name $content
           }
         }
@@ -661,10 +664,6 @@ proc wappInt-handle-request-unsafe {chan} {
   }
   if {![dict exists $wapp REQUEST_URI]} {
     dict set wapp REQUEST_URI /
-  } elseif {[regsub {\?.*} [dict get $wapp REQUEST_URI] {} newR]} {
-    # Some servers (ex: nginx) append the query parameters to REQUEST_URI.
-    # These need to be stripped off
-    dict set wapp REQUEST_URI $newR
   }
   if {[dict exists $wapp SCRIPT_NAME]} {
     dict append wapp BASE_URL [dict get $wapp SCRIPT_NAME]
@@ -674,6 +673,7 @@ proc wappInt-handle-request-unsafe {chan} {
   if {![dict exists $wapp PATH_INFO]} {
     # If PATH_INFO is missing (ex: nginx) then construct it
     set URI [dict get $wapp REQUEST_URI]
+    regsub {\?.*} $URI {} URI
     set skip [string length [dict get $wapp SCRIPT_NAME]]
     dict set wapp PATH_INFO [string range $URI $skip end]
   }
@@ -738,13 +738,20 @@ proc wappInt-handle-request-unsafe {chan} {
     }
     dict unset wapp .new-cookies
   }
+  wapp-before-reply-hook
 
   # Transmit the HTTP reply
   #
-  if {$chan=="stdout"} {
-    puts $chan "Status: [dict get $wapp .reply-code]\r"
+  set rc [dict get $wapp .reply-code]
+  if {$rc=="ABORT"} {
+    # If the page handler invokes "wapp-reply-code ABORT" then close the
+    # TCP/IP connection without sending any reply
+    wappInt-close-channel $chan
+    return
+  } elseif {$chan=="stdout"} {
+    puts $chan "Status: $rc\r"
   } else {
-    puts $chan "HTTP/1.1 [dict get $wapp .reply-code]\r"
+    puts $chan "HTTP/1.1 $rc\r"
     puts $chan "Server: wapp\r"
     puts $chan "Connection: close\r"
   }
@@ -773,11 +780,7 @@ proc wappInt-handle-request-unsafe {chan} {
   if {[string match text/* $mimetype]} {
     set reply [encoding convertto utf-8 [dict get $wapp .reply]]
     if {[regexp {\ygzip\y} [wapp-param HTTP_ACCEPT_ENCODING]]} {
-      catch {
-        set x [zlib gzip $reply]
-        set reply $x
-        puts $chan "Content-Encoding: gzip\r"
-      }
+      catch {wappInt-gzip-reply reply chan}
     }
   } else {
     set reply [dict get $wapp .reply]
@@ -789,11 +792,29 @@ proc wappInt-handle-request-unsafe {chan} {
   wappInt-close-channel $chan
 }
 
+# Compress the reply content
+#
+proc wappInt-gzip-reply {replyVar chanVar} {
+  upvar $replyVar reply $chanVar chan
+  set x [zlib gzip $reply]
+  set reply $x
+  puts $chan "Content-Encoding: gzip\r"
+}
+
 # This routine runs just prior to request-handler dispatch.  The
 # default implementation is a no-op, but applications can override
 # to do additional transformations or checks.
 #
 proc wapp-before-dispatch-hook {} {return}
+
+# This routine runs after the request-handler dispatch and just
+# before the reply is generated.  The default implementation is
+# a no-op, but applications can override to do validation and security
+# checks on the reply, such as verifying that no sensitive information
+# such as an API key or password is accidentally included in the
+# reply text.
+#
+proc wapp-before-reply-hook {} {return}
 
 # Process a single CGI request
 #
@@ -899,6 +920,8 @@ proc wappInt-scgi-readable-unsafe {chan} {
 #    -trace               "puts" each request URL as it is handled, for
 #                         debugging
 #
+#    -debug               Disable content compression
+#
 #    -lint                Run wapp-safety-check on the application instead
 #                         of running the application itself
 #
@@ -947,6 +970,9 @@ proc wapp-start {arglist} {
       }
       -nowait {
         set nowait 1
+      }
+      -debug {
+        proc wappInt-gzip-reply {a b} {return}
       }
       -trace {
         proc wappInt-trace {} {
