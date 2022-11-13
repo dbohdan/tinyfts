@@ -39,7 +39,7 @@ namespace eval import {
 
 proc import::create-db {dest config} {
     dest eval [format {
-        CREATE VIRTUAL TABLE "%s"
+        CREATE VIRTUAL TABLE IF NOT EXISTS "%s"
         USING fts5(
             url,
             title,
