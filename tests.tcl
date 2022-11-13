@@ -29,40 +29,46 @@ package require textutil
 
 cd [file dirname [info script]]
 
-set td(json-sample) {[
+set td(json-sample) [string map [list \n\n \n \n {}] {
     {
         "url": "https://fts.example.com/foo",
         "title": "Foo",
         "modified": 1,
         "content": "Now this is a story UNO"
-    },
+    }
+
     {
         "url": "https://fts.example.com/bar",
         "title": "Bar",
         "modified": 2,
         "content": "all about how UNO"
-    },
+    }
+
     {
         "url": "https://fts.example.com/baz",
         "title": "Baz",
         "modified": 3,
         "content": "My life got flipped turned upside down UNO"
-    },
+    }
+
     {
         "url": "https://fts.example.com/qux",
         "title": "Qux",
         "modified": 4,
         "content": "Don't quote UNO"
-    },
+    }
+
     {
         "url": "https://fts.example.com/quux",
         "title": "Quux",
         "modified": 5,
         "content": "too much ウノ УНО UNO"
     }
-]}
+}]
 
-set td(tcl-sample) [json::json2dict $td(json-sample)]
+set td(tcl-sample) [join [lmap line [split $td(json-sample) \n] {
+    json::json2dict $line
+}] \n]
 
 
 proc fetch args {
@@ -154,7 +160,7 @@ tcltest::test tools-import-1.2.3 {JSON import} -cleanup $td(cleanup) -body {
 
 tcltest::test tools-import-2.1 {} -cleanup $td(cleanup) -body {
     tclsh tools/import tcl /tmp/this/file/does/not/exit $td(dbFile)
-} -returnCodes 1 -match glob -result {*Cannot read file*}
+} -returnCodes 1 -match glob -result {*no such file*}
 
 tcltest::test tools-import-2.2 {} -cleanup $td(cleanup) -body {
     tclsh tools/import nikit $td(dbFile) $td(dbFile)

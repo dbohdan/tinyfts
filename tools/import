@@ -57,38 +57,47 @@ proc import::create-db {dest config} {
 
 
 proc import::serialized {srcPath destPath config} {
-    set contents [expr {
+    set ch [expr {
         $srcPath eq {-}
-        ? [read stdin]
-        : [fileutil::cat $srcPath]
-    }]
-    set dictList [expr {
-        [dict get $config command] eq {json}
-        ? [json::json2dict $contents]
-        : $contents
+        ? {stdin}
+        : [open $srcPath]
     }]
 
-    sqlite3 dest $destPath
+    try {
+        set jsonMode [expr {
+            [dict get $config command] eq {json}
+        }]
 
-    create-db dest $config
+        sqlite3 dest $destPath
 
-    set insertStatement [format {
-        INSERT INTO "%s"
-        VALUES (
-            :values(url),
-            :values(title),
-            :values(modified),
-            :values(content)
-        )
-    } [dict get $config table]]
+        create-db dest $config
 
-    dest transaction {
-        foreach dict $dictList {
-            array set values $dict
-            unset dict
+        set insertStatement [format {
+            INSERT INTO "%s"
+            VALUES (
+                :values(url),
+                :values(title),
+                :values(modified),
+                :values(content)
+            )
+        } [dict get $config table]]
 
-            dest eval $insertStatement
+        dest transaction {
+            while {[gets $ch line] >= 0} {
+                if {[string is space $line]} continue
+
+                set dict [expr {
+                    $jsonMode
+                    ? [json::json2dict $line]
+                    : $line
+                }]
+                array set values $dict
+
+                dest eval $insertStatement
+            }
         }
+    } finally {
+        close $ch
     }
 }
 

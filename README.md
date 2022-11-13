@@ -100,9 +100,9 @@ that has a special meaning.
 
 Tinyfts searches the contents of an SQLite database table with a particular
 schema.  The bundled import tool `tools/import` can import serialized data
-(JSON and Tcl) and wiki pages from a
-[Wikit](https://wiki.tcl-lang.org/page/Wikit)/Nikit database into a tinyfts
-database.
+(text files with one JSON object or Tcl dictionary per line) and wiki pages
+from a [Wikit](https://wiki.tcl-lang.org/page/Wikit)/Nikit database into
+a tinyfts database.
 
 ### Example
 
