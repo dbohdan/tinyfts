@@ -50,7 +50,7 @@ set state {
     }
 
     rate {}
-    version 0.6.0
+    version 0.7.0
 }
 
 set config {
@@ -288,7 +288,7 @@ proc view::html::results {query startMatch endMatch results counter} {
     wapp-subst {\n<ol start="%html($counter)">\n}
 
     foreach result $results {
-        set date [clock format [dict get $result modified] \
+        set date [clock format [dict get $result timestamp] \
                                 -format {%Y-%m-%d} \
                                 -timezone :Etc/UTC]
         wapp-trim {
@@ -298,7 +298,7 @@ proc view::html::results {query startMatch endMatch results counter} {
                         <a href="%html([dict get $result url])">
                             %html([dict get $result title])
                         </a>
-                        (modified %html($date))
+                        (%html($date))
                     </dt>
                     <dd>
         }
@@ -358,7 +358,7 @@ proc view::json::results {query startMatch endMatch results} {
         }
         wapp \{\n
 
-        foreach key {url title modified} {
+        foreach key {url title timestamp} {
             set jsonValue [string-to-json [dict get $result $key]]
             wapp-subst {    "%unsafe($key)": "%unsafe($jsonValue)",\n}
         }
@@ -451,7 +451,7 @@ proc view::tcl::results {query startMatch endMatch results} {
         }
         wapp \{\n
 
-        foreach key {url title modified} {
+        foreach key {url title timestamp} {
             wapp-unsafe "    $key [list [dict get $result $key]]\n"
         }
 
@@ -605,7 +605,7 @@ proc wapp-page-search {} {
             SELECT
                 url,
                 title,
-                modified,
+                timestamp,
                 snippet(
                     "%1$s",
                     3,
@@ -618,7 +618,7 @@ proc wapp-page-search {} {
             FROM "%1$s"
             WHERE
                 "%1$s" MATCH :translated AND
-                -- Column weight: url, title, modified, content.
+                -- Column weight: url, title, timestamp, content.
                 rank MATCH 'bm25(0.0, %3$f, 0.0, 1.0)' AND
                 rank > CAST(:start AS REAL)
             ORDER BY rank ASC

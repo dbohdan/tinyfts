@@ -43,7 +43,7 @@ proc import::create-db {dest config} {
         USING fts5(
             url,
             title,
-            modified,
+            timestamp,
             content,
             tokenize = 'porter unicode61'
         );
@@ -77,7 +77,7 @@ proc import::serialized {srcPath destPath config} {
             VALUES (
                 :values(url),
                 :values(title),
-                :values(modified),
+                :values(timestamp),
                 :values(content)
             )
         } [dict get $config table]]

@@ -33,35 +33,35 @@ set td(json-sample) [string map [list \n\n \n \n {}] {
     {
         "url": "https://fts.example.com/foo",
         "title": "Foo",
-        "modified": 1,
+        "timestamp": 1,
         "content": "Now this is a story UNO"
     }
 
     {
         "url": "https://fts.example.com/bar",
         "title": "Bar",
-        "modified": 2,
+        "timestamp": 2,
         "content": "all about how UNO"
     }
 
     {
         "url": "https://fts.example.com/baz",
         "title": "Baz",
-        "modified": 3,
+        "timestamp": 3,
         "content": "My life got flipped turned upside down UNO"
     }
 
     {
         "url": "https://fts.example.com/qux",
         "title": "Qux",
-        "modified": 4,
+        "timestamp": 4,
         "content": "Don't quote UNO"
     }
 
     {
         "url": "https://fts.example.com/quux",
         "title": "Quux",
-        "modified": 5,
+        "timestamp": 5,
         "content": "too much ウノ УНО UNO"
     }
 }]
@@ -204,13 +204,13 @@ set td(query) http://127.0.0.1:$td(port)/search/?query
 
 tcltest::test search-1.1 {HTML result} -body {
     fetch $td(query)=foo
-} -match glob -result {*Foo*modified 1970-01-01*Now this is a story*}
+} -match glob -result {*Foo*(1970-01-01)*Now this is a story*}
 
 tcltest::test search-1.2 {JSON result} -body {
     json::json2dict [fetch $td(query)=foo&format=json]
 } -result {results {{url https://fts.example.com/foo\
                      title Foo\
-                     modified 1\
+                     timestamp 1\
                      snippet {{Now this is a story UNO} {}}}}}
 
 tcltest::test search-1.3 {Tcl result} -cleanup {unset raw} -body {
@@ -218,7 +218,7 @@ tcltest::test search-1.3 {Tcl result} -cleanup {unset raw} -body {
     dict create {*}[lindex [dict get $raw results] 0]
 } -result {url https://fts.example.com/foo\
            title Foo\
-           modified 1\
+           timestamp 1\
            snippet {{Now this is a story UNO} {}}}
 
 tcltest::test search-1.4 {3 results} -cleanup {unset raw} -body {
