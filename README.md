@@ -30,17 +30,18 @@ Tcler's Wiki looked like](screenshot.png)
 The above and
 * Tcllib
 * kill(1), make(1), sqlite3(1)
+* tDOM if you want to run tools/dir2json
 
 On recent Debian and Ubuntu install the dependencies with
 
 ```sh
-sudo apt install libsqlite3-tcl make sqlite3 tcl tcllib
+sudo apt install libsqlite3-tcl make sqlite3 tcl tcllib tdom
 ```
 
 On FreeBSD with sudo install the dependencies with
 
 ```sh
-sudo pkg install sqlite3 tcl-sqlite3 tcl86 tcllib
+sudo pkg install sqlite3 tcl-sqlite3 tcl86 tcllib tdom
 cd /usr/local/bin
 sudo ln -s tclsh8.6 tclsh
 ```
