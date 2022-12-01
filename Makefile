@@ -7,7 +7,7 @@ tinyfts: Makefile tools/titlecat tools/wrap tinyfts-dev.tcl vendor/tacit/tacit.c
 	chmod +x $@
 
 vendor/tacit/tacit.css.tcl: vendor/tacit/tacit.css Makefile tools/wrap
-	./tools/wrap $< tinyfts 'dict set state css' > $@
+	./tools/wrap $< :: 'dict set state css' > $@
 
 clean:
 	-rm tinyfts vendor/tacit/tacit.css.tcl

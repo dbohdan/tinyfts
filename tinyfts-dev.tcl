@@ -28,7 +28,10 @@ package require sqlite3 3.9
 
 ### Configuration and globals
 
-set state {
+if {![info exists state]} {
+    set state {}
+}
+set state [dict merge {
     css {}
 
     flags {
@@ -51,7 +54,7 @@ set state {
 
     rate {}
     version 0.7.0
-}
+} $state]
 
 set config {
     db-file {}
