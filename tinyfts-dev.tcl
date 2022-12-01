@@ -708,8 +708,6 @@ proc cli::start {argv0 argv} {
     }
 
     try {
-        cd [file dirname [info script]]
-
         set wappArgs {}
         foreach {flag v} $argv {
             regsub ^--? $flag {} k
@@ -729,6 +727,7 @@ proc cli::start {argv0 argv} {
         }
 
         sqlite3 db [config::get db-file] -create false -readonly true
+        cd [file dirname [info script]]
 
         if {[config::get css-file] eq {}} {
             # Only read the default CSS file if no CSS is not already loaded
