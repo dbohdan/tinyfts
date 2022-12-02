@@ -1,5 +1,7 @@
 #! /usr/bin/env tclsh
-# Print text files in a directory as tinyfts JSON lines.
+# Print text files in a directory as tinyfts JSON Lines.  This program uses
+# file(1) to determine what is a text file.  It attempts to extract text from
+# HTML using tDOM.
 # ==============================================================================
 # Copyright (c) 2022 D. Bohdan and contributors listed in AUTHORS
 #
@@ -24,39 +26,58 @@
 
 package require Tcl 8.6-10
 package require fileutil 1
-package require fileutil::magic::filetype 2
-package require json::write
+package require json::write 1
 package require tdom
+
+set batchSize 1000
+
 
 proc main {url-prefix dir args} {
     if {[llength $args] == 0} {
         set args *
     }
 
+    set status 0
     json::write indented false
 
-    set status 0
     cd $dir
-    foreach file [fileutil::findByPattern . -glob -- {*}$args] {
-        try {
-            print-file-as-json ${url-prefix} $file
-        } on error e {
-            puts stderr [list $file $e]
-            set status 1
+    set files [lsort [fileutil::findByPattern . -glob -- {*}$args]]
+    set len [llength $files]
+
+    for {set i 0} {$i < $len} {incr i $::batchSize} {
+        # Do not use "--files-from -", since it doesn't seem able to handle
+        # filenames with newlines.  Run file(1) with batches of files to avoid
+        # exceeding the maximum argument length.  A possible multiuser privacy
+        # concern: the filenames are visible in the process list.
+        set output [exec file \
+            --mime-type \
+            --print0 \
+            --print0 \
+            {*}[lrange $files $i [expr {$i + $::batchSize - 1}]] \
+        ]
+        set types [split [string trimright $output \0] \0]
+
+        dict for {file type} $types {
+            try {
+                print-file-as-json ${url-prefix} $file $type
+            } on error e {
+                puts stderr [list $file $e]
+                set status 1
+            }
         }
     }
 
     exit $status
 }
 
-proc print-file-as-json {url-prefix file} {
-    set type [lindex [fileutil::magic::filetype $file] 1]
-    if {[lindex $type 0] ne {text}} return
+
+proc print-file-as-json {url-prefix file type} {
+    if {![string match text/* $type]} return
 
     set path [string range $file 2 end]
     set text [fileutil::cat $file]
 
-    if {[lindex $type 1] eq {html}} {
+    if {$type eq {text/html}} {
         try {
             set doc [dom parse -html $text]
             set text [$doc asText]
