@@ -1,5 +1,5 @@
 test: tinyfts
-	./tests.tcl
+	./tests/tests.tcl
 
 tinyfts: Makefile tools/titlecat tools/wrap tinyfts-dev.tcl vendor/tacit/tacit.css.tcl vendor/wapp/wapp.tcl
 	printf '#! /usr/bin/env tclsh\n# tinyfts single-file bundle.\n' > $@

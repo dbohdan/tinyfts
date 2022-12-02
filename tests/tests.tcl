@@ -27,7 +27,7 @@ package require json 1
 package require tcltest 2
 package require textutil
 
-cd [file dirname [info script]]
+cd [file dirname [info script]]/..
 
 set td(json-sample) [string map [list \n\n \n \n {}] {
     {
@@ -169,6 +169,18 @@ tcltest::test tools-import-2.2 {} -cleanup $td(cleanup) -body {
 tcltest::test tools-import-2.3 {} -cleanup $td(cleanup) -body {
     tclsh tools/import tcl - $td(dbFile) << \x00\x01\x02\x03\x04\x05\x06\x07
 } -returnCodes 1 -match glob -result *
+
+
+tcltest::test tools-dir2json-1.1 {Normal dir} -body {
+    tclsh tools/dir2json x/ tests/dir1/
+} -match regexp -result \
+{{"url":"x/bar.html","timestamp":\d+,"title":"bar.html","content":"Bar."}
+{"url":"x/foo.txt","timestamp":\d+,"title":"foo.txt","content":"Foo."}}
+
+tcltest::test tools-dir2json-2.1 {Bad HTML} -body {
+    tclsh tools/dir2json x/ tests/dir2/ 2>@1
+} -match glob -result \
+{*can't parse HTML*Missing ">"*"content":"<HTML><HEA"\}}
 
 
 ### Integration: tinyfts.
