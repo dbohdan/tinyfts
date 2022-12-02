@@ -79,7 +79,11 @@ proc print-file-as-json {url-prefix file type} {
 
     if {$type eq {text/html}} {
         try {
-            set doc [dom parse -html $text]
+            # tDOM 0.9.2 can modify text passed to [dom parse -html].  This is
+            # a violation of Tcl semantics.  For example, "<HTML><HEA"
+            # becomes "<html><hea" after a failed attempt to parse it.
+            set copy [string range $text 0 end]
+            set doc [dom parse -html $copy]
             set text [$doc asText]
             $doc delete
         } on error e {
