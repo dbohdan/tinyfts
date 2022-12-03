@@ -30,7 +30,7 @@ Tcler's Wiki looked like](screenshot.png)
 The above and
 * Tcllib
 * kill(1), make(1), sqlite3(1)
-* tDOM if you want to run tools/dir2json
+* tDOM and file(1) to run `tools/dir2json`
 
 On recent Debian and Ubuntu install the dependencies with
 
@@ -155,7 +155,7 @@ proxy.  It will let clients spoof their IP with the header `X-Real-IP` or
 
 ## License
 
-MIT.  [Wapp](https://wapp.tcl.tk/) is copyright (c) 2017 D. Richard Hipp and is
-distributed under the Simplified BSD License.
+MIT.  [Wapp](https://wapp.tcl.tk/) is copyright (c) 2017-2022 D. Richard Hipp
+and is distributed under the Simplified BSD License.
 [Tacit](https://github.com/yegor256/tacit) is copyright (c) 2015-2020
 Yegor Bugayenko and is distributed under the MIT license.
