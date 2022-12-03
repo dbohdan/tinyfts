@@ -99,4 +99,21 @@ proc print-file-as-json {url-prefix file type} {
     ]
 }
 
-main {*}$argv
+
+proc usage {} {
+    puts stderr {usage: dir2json url-prefix dir [glob-pattern ...]}
+    puts stderr "\nConvert text files in dir to tinyfts JSON Lines and print\
+        them to stdout. What is a text file is determined using file(1). The\
+        names of the files must match at least one glob pattern if any glob\
+        patterns are given."
+}
+
+
+# If this is the main script...
+if {[info exists argv0] && ([file tail [info script]] eq [file tail $argv0])} {
+    if {$argv in {{} -h -help --help -? /?}} {
+        usage
+        exit 0
+    }
+    main {*}$argv
+}
