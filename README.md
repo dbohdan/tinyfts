@@ -70,6 +70,14 @@ Options:
     --query-syntax web
 ```
 
+The basic usage is,
+
+```sh
+# Local server
+./tinyfts --db-file example.sqlite3 --local 8080
+# Server available over the network
+./tinyfts --db-file example.sqlite3 --server 8080
+```
 
 ## Query syntax
 
