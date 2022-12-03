@@ -55,7 +55,7 @@ proc wrap::escape data {
 }
 
 
-proc wrap::main {src namespace {prefix {variable data}}} {
+proc wrap::main {src {namespace ::} {prefix {variable data}}} {
     set data [expr {
         $src eq {-}
         ? [fconfigure stdin -translation binary read stdin]
