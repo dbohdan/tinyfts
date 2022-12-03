@@ -70,9 +70,10 @@ Options:
     --query-syntax web
 ```
 
-The basic usage is,
+The basic usage is
 
 ```sh
+tools/import json example.jsonl example.sqlite3
 # Local server
 ./tinyfts --db-file example.sqlite3 --local 8080
 # Server available over the network
