@@ -186,7 +186,21 @@ namespace eval import {
 }
 
 
+proc import::usage {} {
+    variable defaults
+
+    puts stderr "usage: import (json|tcl|nikit|wikit) src dest\
+        \[--table [dict get $defaults table]\]\
+        \[--url-prefix [dict get $defaults url-prefix]\]"
+    puts stderr "\nImport src (a file path or \"-\" for stdin) of one of\
+        the supported formats into the tinyfts database dest."
+}
+
 # If this is the main script...
 if {[info exists argv0] && ([file tail [info script]] eq [file tail $argv0])} {
+    if {$argv in {{} -h -help --help -? /?}} {
+        import::usage
+        exit 0
+    }
     import {*}$argv
 }
