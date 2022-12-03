@@ -59,7 +59,7 @@ proc wrap::main {src {namespace ::} {prefix {variable data}}} {
     set data [expr {
         $src eq {-}
         ? [fconfigure stdin -translation binary read stdin]
-        : [fileutil::cat -translation binary $src]
+        : [fileutil::cat -translation binary -- $src]
     }]
 
     fconfigure stdout -translation binary
@@ -69,7 +69,20 @@ proc wrap::main {src {namespace ::} {prefix {variable data}}} {
 }
 
 
+proc wrap::usage {} {
+    puts stderr {usage: wrap src [namespace] [prefix]}
+    puts stderr "\nWrap data for inclusion in Tcl source code. Reads the file\
+        src and prints code that runs in the given namespace (:: by default)\
+        the prefix code fragment with the contents of src as the last\
+        argument."
+}
+
+
 # If this is the main script...
 if {[info exists argv0] && ([file tail [info script]] eq [file tail $argv0])} {
+    if {$argv in {{} -h -help --help -? /?}} {
+        wrap::usage
+        exit 0
+    }
     wrap::main {*}$argv
 }
