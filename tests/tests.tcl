@@ -1,6 +1,7 @@
 #! /usr/bin/env tclsh
 # ==============================================================================
-# Copyright (c) 2019-2022 D. Bohdan and contributors listed in AUTHORS
+# Copyright (c) 2019-2022, 2024 D. Bohdan
+# and contributors listed in AUTHORS
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -116,6 +117,13 @@ tcltest::test translate-query-1.3 {} -body {
     translate-query::web foo\\\"bar
 } -result \"foo\\\"bar\"
 
+tcltest::test translate-query-1.4 {} -body {
+    translate-query::web {foo bar's baz}
+} -result {"foo" "bar's" "baz"}
+
+tcltest::test translate-query-1.5 {} -body {
+    translate-query::web {foo "bar's baz"}
+} -result {"foo" "bar's baz"}
 
 
 ### Integration: tools.
