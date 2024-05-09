@@ -1,5 +1,5 @@
 # Copyright (c) 2017 D. Richard Hipp
-# 
+#
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the Simplified BSD License (also
 # known as the "2-Clause License" or "FreeBSD License".)
@@ -16,7 +16,7 @@
 #
 #   (2)  Indentifiers intended for internal use only begin with "wappInt"
 #
-package require Tcl 8.6-10
+package require Tcl 8.6 9
 
 # Add text to the end of the HTTP reply.  No interpretation or transformation
 # of the text is performs.  The argument should be enclosed within {...}
