@@ -5,9 +5,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Install dependencies
-      run: sudo apt install libsqlite3-tcl sqlite3 tcl tcllib tdom
+      run: sudo apt-get install -y libsqlite3-tcl sqlite3 tcl tcllib tdom
     - name: Checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v4
     - name: Build
       run: make tinyfts
     - name: Run tests
