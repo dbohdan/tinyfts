@@ -86,13 +86,13 @@ tools/import jsonl example.jsonl example.sqlite3
 The default full-text search query syntax in tinyfts resembles that of a Web search engine.
 It can handle the following types of expressions.
 
-- `foo` — search for the word *foo*.
-- `"foo bar"` — search for the phrase *foo bar*.
-- `foo AND bar`, `foo OR bar`, `NOT foo` — search for both *foo* and *bar*,
-  at least one of *foo* and *bar*,
-  documents without *foo* respectively.
-  *foo AND bar* is identical to *foo bar*.
-  The operators *AND*, *OR*, and *NOT* must be in all caps.
+- `foo` — search for the word `foo`.
+- `"foo bar"` — search for the phrase `foo bar`.
+- `foo AND bar`, `foo OR bar`, `NOT foo` — search for both `foo` and `bar`,
+  at least one of `foo` and `bar`,
+  and documents without `foo` respectively.
+  `foo AND bar` is identical to `foo bar`.
+  The operators `AND`, `OR`, and `NOT` must be in all caps.
 - `-foo`, `-"foo bar"` — the same as `NOT foo`, `NOT "foo bar"`.
 
 ### FTS5
