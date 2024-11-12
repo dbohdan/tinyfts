@@ -30,7 +30,7 @@ package require textutil
 
 cd [file dirname [info script]]/..
 
-set td(json-sample) [string map [list \n\n \n \n {}] {
+set td(json-lines-sample) [string map [list \n\n \n \n {}] {
     {
         "url": "https://fts.example.com/foo",
         "title": "Foo",
@@ -67,7 +67,7 @@ set td(json-sample) [string map [list \n\n \n \n {}] {
     }
 }]
 
-set td(tcl-sample) [join [lmap line [split $td(json-sample) \n] {
+set td(tcl-sample) [join [lmap line [split $td(json-lines-sample) \n] {
     json::json2dict $line
 }] \n]
 
@@ -147,20 +147,20 @@ tcltest::test tools-import-1.1.3 {Tcl import} -cleanup $td(cleanup) -body {
 } -match glob -result https://fts.example.com/foo\nhttps://fts.example.com/bar
 
 
-tcltest::test tools-import-1.2.1 {JSON import} -body {
-    tclsh tools/import json - $td(dbFile) << $td(json-sample)
+tcltest::test tools-import-1.2.1 {JSON Lines import} -body {
+    tclsh tools/import jsonl - $td(dbFile) << $td(json-lines-sample)
 } -cleanup $td(cleanup) -result {}
 
-tcltest::test tools-import-1.2.2 {JSON import} -cleanup $td(cleanup) -body {
-    tclsh tools/import json - $td(dbFile) --table blah \
-          << $td(json-sample)
+tcltest::test tools-import-1.2.2 {JSON Lines import} -cleanup $td(cleanup) -body {
+    tclsh tools/import jsonl - $td(dbFile) --table blah \
+          << $td(json-lines-sample)
 
     exec sqlite3 $td(dbFile) .schema
 } -match glob -result {*CREATE VIRTUAL TABLE "blah"*USING fts5*}
 
-tcltest::test tools-import-1.2.3 {JSON import} -cleanup $td(cleanup) -body {
-    tclsh tools/import json - $td(dbFile) --url-prefix http://example.com/ \
-          << $td(json-sample)
+tcltest::test tools-import-1.2.3 {JSON Lines import} -cleanup $td(cleanup) -body {
+    tclsh tools/import jsonl - $td(dbFile) --url-prefix http://example.com/ \
+          << $td(json-lines-sample)
 
     exec sqlite3 $td(dbFile) {SELECT url FROM tinyfts LIMIT 2}
 } -match glob -result https://fts.example.com/foo\nhttps://fts.example.com/bar
@@ -179,14 +179,14 @@ tcltest::test tools-import-2.3 {} -cleanup $td(cleanup) -body {
 } -returnCodes 1 -match glob -result *
 
 
-tcltest::test tools-dir2json-1.1 {Normal dir} -body {
-    tclsh tools/dir2json x/ tests/dir1/
+tcltest::test tools-dir2jsonl-1.1 {Normal dir} -body {
+    tclsh tools/dir2jsonl x/ tests/dir1/
 } -match regexp -result \
 {{"url":"x/bar.html","timestamp":\d+,"title":"bar.html","content":"Bar."}
 {"url":"x/foo.txt","timestamp":\d+,"title":"foo.txt","content":"Foo."}}
 
-tcltest::test tools-dir2json-2.1 {Bad HTML} -body {
-    tclsh tools/dir2json x/ tests/dir2/ 2>@1
+tcltest::test tools-dir2jsonl-2.1 {Bad HTML} -body {
+    tclsh tools/dir2jsonl x/ tests/dir2/ 2>@1
 } -match glob -result \
 {*can't parse HTML*Missing ">"*"content":"<HTML><HEA"\}}
 

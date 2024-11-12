@@ -66,8 +66,8 @@ proc import::serialized {srcPath destPath config} {
     }]
 
     try {
-        set jsonMode [expr {
-            [dict get $config command] eq {json}
+        set jsonLinesMode [expr {
+            [dict get $config command] eq {jsonl}
         }]
 
         sqlite3 dest $destPath
@@ -89,7 +89,7 @@ proc import::serialized {srcPath destPath config} {
                 if {[string is space $line]} continue
 
                 set dict [expr {
-                    $jsonMode
+                    $jsonLinesMode
                     ? [json::json2dict $line]
                     : $line
                 }]
@@ -162,8 +162,8 @@ proc import::parse-options {command options} {
 }
 
 
-proc import::json {src dest args} {
-    serialized $src $dest [parse-options json $args]
+proc import::jsonl {src dest args} {
+    serialized $src $dest [parse-options jsonl $args]
 }
 
 
@@ -183,7 +183,7 @@ proc import::wikit {src dest args} {
 
 
 namespace eval import {
-    namespace export json nikit tcl wikit
+    namespace export jsonl nikit tcl wikit
     namespace ensemble create
 }
 
@@ -191,7 +191,7 @@ namespace eval import {
 proc import::usage {} {
     variable defaults
 
-    puts stderr "usage: import (json|tcl|nikit|wikit) src dest\
+    puts stderr "usage: import (jsonl|tcl|nikit|wikit) src dest\
         \[--table [dict get $defaults table]\]\
         \[--url-prefix [dict get $defaults url-prefix]\]"
     puts stderr "\nImport src (a file path or \"-\" for stdin) of one of\

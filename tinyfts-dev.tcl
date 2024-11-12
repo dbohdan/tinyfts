@@ -519,7 +519,7 @@ proc translate-query::web query {
     set not {}
     set translated {}
 
-    # A crude query tokenizer.  Doesn't understand escaped double quotes.
+    # A crude query tokenizer. Doesn't understand escaped double quotes.
     set start 0
     while {[regexp -indices \
                    -start $start \

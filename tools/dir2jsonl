@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
-# Print text files in a directory as tinyfts JSON Lines.  This program uses
-# file(1) to determine what is a text file.  It attempts to extract text from
+# Print text files in a directory as tinyfts JSON Lines. This program uses
+# file(1) to determine what is a text file. It attempts to extract text from
 # HTML using tDOM.
 # ==============================================================================
 # Copyright (c) 2022, 2024 D. Bohdan
@@ -47,8 +47,8 @@ proc main {url-prefix dir args} {
 
     for {set i 0} {$i < $len} {incr i $::batchSize} {
         # Do not use "--files-from -", since it doesn't seem able to handle
-        # filenames with newlines.  Run file(1) with batches of files to avoid
-        # exceeding the maximum argument length.  A possible multiuser privacy
+        # filenames with newlines. Run file(1) with batches of files to avoid
+        # exceeding the maximum argument length. A possible multiuser privacy
         # concern: the filenames are visible in the process list.
         set output [exec file \
             --mime-type \
@@ -60,7 +60,7 @@ proc main {url-prefix dir args} {
 
         dict for {file type} $types {
             try {
-                print-file-as-json ${url-prefix} $file $type
+                print-file-as-json-lines ${url-prefix} $file $type
             } on error e {
                 puts stderr [list $file $e]
                 set status 1
@@ -72,7 +72,7 @@ proc main {url-prefix dir args} {
 }
 
 
-proc print-file-as-json {url-prefix file type} {
+proc print-file-as-json-lines {url-prefix file type} {
     if {![string match text/* $type]} return
 
     set path [string range $file 2 end]
@@ -80,8 +80,8 @@ proc print-file-as-json {url-prefix file type} {
 
     if {$type eq {text/html}} {
         try {
-            # tDOM 0.9.2 can modify text passed to [dom parse -html].  This is
-            # a violation of Tcl semantics.  For example, "<HTML><HEA"
+            # tDOM 0.9.2 can modify text passed to [dom parse -html]. This is
+            # a violation of Tcl semantics. For example, "<HTML><HEA"
             # becomes "<html><hea" after a failed attempt to parse it.
             set copy [string range $text 0 end]
             set doc [dom parse -html $copy]
@@ -102,7 +102,7 @@ proc print-file-as-json {url-prefix file type} {
 
 
 proc usage {} {
-    puts stderr {usage: dir2json url-prefix dir [glob-pattern ...]}
+    puts stderr {usage: dir2jsonl url-prefix dir [glob-pattern ...]}
     puts stderr "\nConvert text files in dir to tinyfts JSON Lines and print\
         them to stdout. What is a text file is determined using file(1). The\
         names of the files must match at least one glob pattern if any glob\
