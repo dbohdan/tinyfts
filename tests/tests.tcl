@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 # ==============================================================================
-# Copyright (c) 2019-2022, 2024 D. Bohdan
+# Copyright (c) 2019-2022, 2024-2025 D. Bohdan
 # and contributors listed in AUTHORS
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -126,7 +126,7 @@ tcltest::test translate-query-1.5 {} -body {
 } -result {"foo" "bar's baz"}
 
 
-### Integration: tools.
+### End-to-end: tools.
 
 tcltest::test tools-import-1.1.1 {Tcl import} -body {
     tclsh tools/import tcl - $td(dbFile) << $td(tcl-sample)
@@ -191,7 +191,7 @@ tcltest::test tools-dir2jsonl-2.1 {Bad HTML} -body {
 {*can't parse HTML*Missing ">"*"content":"<HTML><HEA"\}}
 
 
-### Integration: tinyfts.
+### End-to-end: tinyfts.
 
 set td(port) [expr 8000+int(rand()*1000)]
 tclsh tools/import tcl - $td(dbFile) << $td(tcl-sample)
