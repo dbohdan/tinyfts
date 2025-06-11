@@ -1,7 +1,7 @@
 #! /usr/bin/env tclsh
 # tinyfts: a very small standalone full-text search HTTP server.
 # ==============================================================================
-# Copyright (c) 2019-2022, 2024 D. Bohdan
+# Copyright (c) 2019-2022, 2024-2025 D. Bohdan
 # and contributors listed in AUTHORS
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -54,7 +54,7 @@ set state [dict merge {
     }
 
     rate {}
-    version 0.8.0
+    version 0.8.1
 } $state]
 
 set config {
@@ -701,7 +701,7 @@ proc cli::usage me {
 
 
 proc cli::start {argv0 argv} {
-    if {$argv in {-v -version --version}} {
+    if {$argv in {-V -v -version --version}} {
         puts stderr [state::get version]
         exit 0
     }
